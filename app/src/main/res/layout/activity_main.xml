@@ -19,6 +19,7 @@
 
     <!-- Tiêu đề -->
     <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
@@ -28,6 +29,7 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tvSubtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
@@ -45,6 +47,22 @@
         android:elevation="4dp"
         android:orientation="vertical"
         android:padding="20dp">
+
+        <!--Full Name-->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutFullName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Full Name"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"> <!-- Ẩn đi ban đầu -->
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtFullName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Email -->
         <com.google.android.material.textfield.TextInputLayout
@@ -74,6 +92,23 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Confirm Password -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutConfirmPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Confirm Password"
+            app:endIconMode="password_toggle"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtConfirmPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Forgot Password -->
         <TextView
             android:id="@+id/tvForgotPassword"
@@ -82,7 +117,8 @@
             android:layout_gravity="end"
             android:layout_marginTop="8dp"
             android:text="Forgot Password?"
-            android:textColor="#2196F3" />
+            android:textColor="#2196F3"
+            android:visibility="visible"/>
 
         <!-- Sign In button -->
         <Button
@@ -96,6 +132,7 @@
 
         <!-- OR continue with -->
         <TextView
+            android:id="@+id/tvOr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -119,6 +156,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="   Google"
+                android:textStyle="bold"
                 android:textColor="#333333"
                 app:icon="@drawable/google"
                 app:iconTint="@null"
