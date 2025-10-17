@@ -1,5 +1,6 @@
 package fpt.edu.vn.vinho_app.daos;
 
+import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -11,6 +12,7 @@ import fpt.edu.vn.vinho_app.models.Report;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 
+@Dao
 public interface ReportDao {
     @Query("select * from reports")
     Flowable<List<Report>> getAll();
