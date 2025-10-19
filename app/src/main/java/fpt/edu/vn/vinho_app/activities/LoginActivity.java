@@ -1,5 +1,6 @@
 package fpt.edu.vn.vinho_app.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -84,6 +85,16 @@ public class LoginActivity extends AppCompatActivity {
                 tvSignUp.setText("Don't have an account? Sign Up");
             }
         });
+
+        btnSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(LoginActivity.this, OnboardingActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
     private void fadeInView(View view) {
