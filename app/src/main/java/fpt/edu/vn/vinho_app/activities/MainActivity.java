@@ -1,65 +1,95 @@
 package fpt.edu.vn.vinho_app.activities;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.FrameLayout;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.ai.FirebaseAI;
-import com.google.firebase.ai.GenerativeModel;
-import com.google.firebase.ai.java.GenerativeModelFutures;
-import com.google.firebase.ai.type.Content;
-import com.google.firebase.ai.type.GenerateContentResponse;
-import com.google.firebase.ai.type.GenerativeBackend;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.card.MaterialCardView;
 
 import fpt.edu.vn.vinho_app.R;
+import fpt.edu.vn.vinho_app.fragments.BudgetFragment;
+import fpt.edu.vn.vinho_app.fragments.HomeFragment;
+import fpt.edu.vn.vinho_app.fragments.InsightsFragment;
+import fpt.edu.vn.vinho_app.fragments.ProfileFragment;
 
 public class MainActivity extends AppCompatActivity {
-
-    //Khai bao
-
+    private BottomNavigationView bottomNav;
+    private MaterialCardView fabAdd;
+    private FrameLayout frameContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
-        // Provide a prompt that contains text
-        Content prompt = new Content.Builder()
-                .addText("Write a story about a magic backpack.")
-                .build();
+        bottomNav = findViewById(R.id.bottom_nav);
+        fabAdd = findViewById(R.id.fab_add);
+        frameContainer = findViewById(R.id.frame_container);
 
-        // To generate text output, call generateContent with the text input
-//        ListenableFuture<GenerateContentResponse> response = model.generateContent(prompt);
-//        Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
-//            @Override
-//            public void onSuccess(GenerateContentResponse result) {
-//                String resultText = result.getText();
-//                System.out.println(resultText);
-//            }
-//
-//            @Override
-//            public void onFailure(Throwable t) {
-//                t.printStackTrace();
-//            }
-//        }, executor);
+        // FAB click với animation
+        if (fabAdd != null) {
+            fabAdd.setOnClickListener(v -> {
+                Toast.makeText(this, "Add clicked", Toast.LENGTH_SHORT).show();
 
+                // Animation nhấn
+                v.animate()
+                        .scaleX(0.85f)
+                        .scaleY(0.85f)
+                        .setDuration(100)
+                        .withEndAction(() -> v.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(100)
+                                .start())
+                        .start();
+            });
+        }
 
+        // Disable placeholder
+        if (bottomNav != null) {
+            bottomNav.getMenu().findItem(R.id.nav_placeholder).setEnabled(false);
+        }
+
+        // Load default fragment
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment());
+        }
+
+        // Bottom navigation listener
+        if (bottomNav != null) {
+            bottomNav.setOnNavigationItemSelectedListener(item -> {
+                Fragment selectedFragment = null;
+
+                int itemId = item.getItemId();
+                if (itemId == R.id.nav_home) {
+                    selectedFragment = new HomeFragment();
+                } else if (itemId == R.id.nav_budget) {
+                    selectedFragment = new BudgetFragment();
+                } else if (itemId == R.id.nav_insights) {
+                    selectedFragment = new InsightsFragment();
+                } else if (itemId == R.id.nav_profile) {
+                    selectedFragment = new ProfileFragment();
+                } else if (itemId == R.id.nav_placeholder) {
+                    return false;
+                }
+
+                return loadFragment(selectedFragment);
+            });
+        }
     }
 
-
+    private boolean loadFragment(Fragment fragment) {
+        if (fragment != null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_container, fragment)
+                    .commit();
+            return true;
+        }
+        return false;
+    }
 }
