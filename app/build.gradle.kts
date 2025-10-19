@@ -62,6 +62,7 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-ai")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 
     // Required for one-shot operations (to use `ListenableFuture` from Guava Android)
     implementation("com.google.guava:guava:31.0.1-android")
