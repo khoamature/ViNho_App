@@ -22,7 +22,7 @@ import fpt.edu.vn.vinho_app.adapter.ChatAdapter;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.ragchat.ChatRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat.ChatResponse;
 import fpt.edu.vn.vinho_app.data.repository.RagChatRepository;
-import fpt.edu.vn.vinho_app.domain.model.Message;
+import fpt.edu.vn.vinho_app.ui.viewmodel.Message;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -33,7 +33,6 @@ public class ChatbotFragment extends Fragment {
     private ChatAdapter adapter;
     private List<Message> messageList;
     private EditText editTextMessage;
-    private Button buttonSend;
 
     @Nullable
     @Override
@@ -47,7 +46,7 @@ public class ChatbotFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerViewChat);
         editTextMessage = view.findViewById(R.id.editTextMessage);
-        buttonSend = view.findViewById(R.id.buttonSend);
+        Button buttonSend = view.findViewById(R.id.buttonSend);
 
         messageList = new ArrayList<>();
         adapter = new ChatAdapter(messageList);
@@ -70,12 +69,12 @@ public class ChatbotFragment extends Fragment {
             adapter.notifyItemInserted(messageList.size() - 1);
             recyclerView.scrollToPosition(messageList.size() - 1);
 
-            ChatRequest request = new ChatRequest(messageText);
+            ChatRequest request = new ChatRequest(messageText, "01F68AE3-7AA4-4AC0-8778-215D9B113D44");
             Call<ChatResponse> call = RagChatRepository.getRagChatService(getContext()).chat(request);
 
-            call.enqueue(new Callback<ChatResponse>() {
+            call.enqueue(new Callback<>() {
                 @Override
-                public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
+                public void onResponse(@NonNull Call<ChatResponse> call, @NonNull Response<ChatResponse> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         thinkingMessage.setText(response.body().getPayload().getAnswer());
                     } else {
@@ -90,7 +89,7 @@ public class ChatbotFragment extends Fragment {
                 }
 
                 @Override
-                public void onFailure(Call<ChatResponse> call, Throwable t) {
+                public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
                     Log.e("API_ERROR", "API call failed", t);
                     thinkingMessage.setText("Error: API call failed.");
                     adapter.notifyItemChanged(messageList.size() - 1);

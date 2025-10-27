@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.domain.model.Message;
+import fpt.edu.vn.vinho_app.ui.viewmodel.Message;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
 

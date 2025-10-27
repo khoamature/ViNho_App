@@ -2,6 +2,8 @@ package fpt.edu.vn.vinho_app.data.remote.retrofit;
 
 import android.annotation.SuppressLint;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -10,6 +12,7 @@ import javax.net.ssl.X509TrustManager;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
 
 public class ApiClient {
     private static final String BASE_URL = "https://10.0.2.2:7027/api/"; // Use 10.0.2.2 for Android emulator to connect to localhost
@@ -59,6 +62,12 @@ public class ApiClient {
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
             builder.hostnameVerifier((hostname, session) -> true);
+
+            // Add the timeouts here
+            builder.connectTimeout(60, TimeUnit.SECONDS);
+            builder.readTimeout(60, TimeUnit.SECONDS);
+            builder.writeTimeout(60, TimeUnit.SECONDS);
+
             return builder;
         } catch (Exception e) {
             throw new RuntimeException(e);

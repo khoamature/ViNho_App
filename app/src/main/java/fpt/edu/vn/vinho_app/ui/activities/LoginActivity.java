@@ -3,6 +3,7 @@ package fpt.edu.vn.vinho_app.ui.activities;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +29,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.GoogleLoginRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.LoginRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.auth.TokenResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.repository.AuthRepository;
@@ -90,25 +92,18 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        btnSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setClass(LoginActivity.this, OnboardingActivity.class);
-                startActivity(intent);
+        btnSignIn.setOnClickListener(v -> {
+            if (isSignUp) {
+                // Handle sign up logic here
+            } else {
+                handleLogin();
             }
         });
 
-        btnGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
+        btnGoogle.setOnClickListener(v -> signIn());
 
         // 2. Configure Google Sign-In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                // You need to get the web client ID from your google-services.json file
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
@@ -133,6 +128,48 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
+    private void handleLogin() {
+        String email = edtEmail.getText().toString().trim();
+        String password = edtPassword.getText().toString().trim();
+
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LoginRequest loginRequest = new LoginRequest(email, password);
+        Call<BaseResponse<TokenResponse>> call = AuthRepository.getAuthService().login(loginRequest);
+
+        call.enqueue(new Callback<BaseResponse<TokenResponse>>() {
+            @Override
+            public void onResponse(Call<BaseResponse<TokenResponse>> call, Response<BaseResponse<TokenResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    String accessToken = response.body().getPayload().getAccessToken();
+
+                    SharedPreferences sharedPref = getSharedPreferences("auth", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString("token", accessToken);
+                    editor.apply();
+
+                    Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
+                    navigateToMain();
+                } else {
+                    String errorMessage = "Login failed.";
+                    if (response.body() != null) {
+                        errorMessage = response.body().getMessage();
+                    }
+                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse<TokenResponse>> call, Throwable t) {
+                Toast.makeText(LoginActivity.this, "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+            }
+        });
+    }
+
     private void initWidget() {
         tvTitle = findViewById(R.id.tvTitle);
         tvSubtitle = findViewById(R.id.tvSubtitle);
@@ -146,8 +183,8 @@ public class LoginActivity extends AppCompatActivity {
         btnSignIn = findViewById(R.id.btnSignIn);
         btnGoogle = findViewById(R.id.btnGoogle);
 
-        TextInputLayout layoutFullName = findViewById(R.id.layoutFullName);
-        TextInputLayout layoutConfirmPassword = findViewById(R.id.layoutConfirmPassword);
+        layoutFullName = findViewById(R.id.layoutFullName);
+        layoutConfirmPassword = findViewById(R.id.layoutConfirmPassword);
     }
 
     private void signIn() {
@@ -171,7 +208,7 @@ public class LoginActivity extends AppCompatActivity {
                     editor.apply();
 
                     Toast.makeText(LoginActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
-                    navigateToInsight();
+                    navigateToMain();
                 } else {
                     String errorMessage = "Login failed.";
                     if (response.body() != null) {
@@ -189,8 +226,8 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void navigateToInsight() {
-        Intent intent = new Intent(LoginActivity.this, OnboardingActivity.class);
+    private void navigateToMain() {
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(intent);
         finish(); // Prevents user from going back to the login screen
     }
@@ -198,20 +235,20 @@ public class LoginActivity extends AppCompatActivity {
     private void fadeInView(View view) {
         if (view != null) {
             view.setAlpha(0f);
-        view.setVisibility(View.VISIBLE);
-        view.animate()
-                .alpha(1f)
-                .setDuration(400)
-                .setListener(null);
+            view.setVisibility(View.VISIBLE);
+            view.animate()
+                    .alpha(1f)
+                    .setDuration(400)
+                    .setListener(null);
         }
     }
 
     private void fadeOutView(View view) {
         if (view != null) {
-        view.animate()
-                .alpha(0f)
-                .setDuration(300)
-                .withEndAction(() -> view.setVisibility(View.GONE));
+            view.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> view.setVisibility(View.GONE));
         }
     }
 }

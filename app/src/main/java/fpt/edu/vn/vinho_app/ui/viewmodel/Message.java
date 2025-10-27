@@ -1,4 +1,4 @@
-package fpt.edu.vn.vinho_app.domain.model;
+package fpt.edu.vn.vinho_app.ui.viewmodel;
 
 public class Message {
     private String text;
