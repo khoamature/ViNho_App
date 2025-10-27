@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".activities.OnboardingActivity">
+    tools:context=".ui.activities.OnboardingActivity">
 
     <!-- ViewPager2 để hiển thị các slide -->
     <androidx.viewpager2.widget.ViewPager2

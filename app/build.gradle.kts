@@ -71,4 +71,10 @@ dependencies {
     implementation("org.reactivestreams:reactive-streams:1.0.4")
 
     implementation("com.google.android.material:material:1.11.0")
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    // Add converter libraries as needed, e.g., for JSON parsing
+    implementation ("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation ("com.squareup.retrofit2:converter-scalars:3.0.0")
 }
