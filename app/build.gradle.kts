@@ -43,7 +43,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     // Room
-    val room_version = "2.8.2"
+    val room_version = "2.8.3"
     implementation("androidx.room:room-runtime:${room_version}")
     annotationProcessor("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-rxjava3:${room_version}")
@@ -77,4 +77,14 @@ dependencies {
     // Add converter libraries as needed, e.g., for JSON parsing
     implementation ("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation ("com.squareup.retrofit2:converter-scalars:3.0.0")
+
+    implementation("io.reactivex.rxjava3:rxandroid:3.0.2")
+    // It is also recommended to explicitly depend on RxJava's latest version
+    implementation("io.reactivex.rxjava3:rxjava:3.1.5")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime:2.9.0")
+
+    // UI
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

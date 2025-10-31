@@ -7,6 +7,6 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface RagChatService {
-    @POST("ragchat/chat")
+    @POST("chats")
     Call<ChatResponse> chat(@Body ChatRequest request);
 }

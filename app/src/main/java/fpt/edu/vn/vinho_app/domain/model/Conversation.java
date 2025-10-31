@@ -1,38 +1,30 @@
 package fpt.edu.vn.vinho_app.domain.model;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
-import androidx.room.PrimaryKey;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import java.util.UUID;
-
-@Entity(tableName = "categories",
+@Entity(tableName = "conversations",
         foreignKeys = @ForeignKey(entity = User.class,
                 parentColumns = "userId",
                 childColumns = "userId",
-                onDelete = ForeignKey.CASCADE), // Adjust onDelete as needed
+                onDelete = ForeignKey.CASCADE),
         indices = {@Index("userId")})
-public class Category {
+public class Conversation {
 
     @PrimaryKey
     @NonNull
     public String id; // Mapped from Guid
 
-    @Nullable // For global categories vs user-specific
-    public String userId; // Mapped from Guid?
+    @NonNull
+    public String userId; // Mapped from Guid
 
     @ColumnInfo(defaultValue = "")
-    public String name = "";
-
-    @ColumnInfo(defaultValue = "")
-    public String description = "";
-
-    @NonNull // Assuming CategoryType is never null
-    public String type; // Mapped from enum CategoryType (store as String)
+    public String title = "";
 
     // --- Audit, Soft Delete, Sync Fields ---
     @Nullable
@@ -45,30 +37,15 @@ public class Category {
     public Long updatedAt;
 
     @ColumnInfo(defaultValue = "0")
-    public boolean isSynced = false;
+    public boolean isSynced = false; // Needs sync when created locally
 
     @Nullable
     public Long syncedAt;
 
-    // --- Room requires a no-arg constructor ---
-    public Category() {
-        // Default constructor for Room
-    }
+    public Conversation() {}
 
-    // --- Constructor for convenience ---
-    public Category(@Nullable String userId, @NonNull String name, @NonNull String type, String description) {
-        this.id = UUID.randomUUID().toString();
-        this.userId = userId;
-        this.name = name;
-        this.type = type;
-        this.description = description;
-        long now = System.currentTimeMillis();
-        this.createdAt = now;
-        this.updatedAt = now;
-        this.isSynced = false;
-    }
+    // Add constructor, getters, setters...
 
-    // --- Getters and Setters ---
     @NonNull
     public String getId() {
         return id;
@@ -78,38 +55,21 @@ public class Category {
         this.id = id;
     }
 
-    @Nullable
+    @NonNull
     public String getUserId() {
         return userId;
     }
 
-    public void setUserId(@Nullable String userId) {
+    public void setUserId(@NonNull String userId) {
         this.userId = userId;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @NonNull
-    public String getType() {
-        return type;
-    }
-
-    public void setType(@NonNull String type) {
-        this.type = type;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Nullable
@@ -153,6 +113,17 @@ public class Category {
     }
 
     public void setSyncedAt(@Nullable Long syncedAt) {
+        this.syncedAt = syncedAt;
+    }
+
+    public Conversation(@NonNull String id, @NonNull String userId, String title, @Nullable Long deletedAt, @NonNull Long createdAt, @NonNull Long updatedAt, boolean isSynced, @Nullable Long syncedAt) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.deletedAt = deletedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.isSynced = isSynced;
         this.syncedAt = syncedAt;
     }
 }

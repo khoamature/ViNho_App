@@ -1,45 +1,111 @@
 package fpt.edu.vn.vinho_app.domain.model;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "reports")
+import java.util.UUID;
+
+@Entity(tableName = "reports",
+        foreignKeys = @ForeignKey(entity = User.class,
+                parentColumns = "userId",
+                childColumns = "userId",
+                onDelete = ForeignKey.CASCADE),
+        indices = {@Index("userId"), @Index("month")})
 public class Report {
 
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    private int id;
-    @ColumnInfo(name = "month")
-    private String month;         // "2025-10"
-    @ColumnInfo(name = "total_income")
-    private double totalIncome;
-    @ColumnInfo(name = "total_expense")
-    private double totalExpense;
-    @ColumnInfo(name = "ai_suggestion")
-    private String aiSuggestion;  // Kết quả gợi ý từ AI
+    @PrimaryKey
+    @NonNull
+    public String id; // Mapped from Guid
 
-    public Report(String month, double totalIncome, double totalExpense, String aiSuggestion) {
-        this.month = month;
-        this.totalIncome = totalIncome;
-        this.totalExpense = totalExpense;
-        this.aiSuggestion = aiSuggestion;
+    @NonNull
+    public String userId; // Mapped from Guid
+
+    @NonNull
+    public Long month; // Mapped from DateOnly (store as timestamp of first day of month)
+
+    @ColumnInfo(defaultValue = "")
+    public String aiSuggestion = "";
+
+    public double totalIncome; // Mapped from decimal
+    public double totalExpense; // Mapped from decimal
+
+    // --- Audit, Soft Delete, Sync Fields ---
+    @Nullable
+    public Long deletedAt;
+
+    @NonNull
+    public Long createdAt;
+
+    @NonNull
+    public Long updatedAt;
+
+    // Reports are usually generated server-side and downloaded.
+    // 'isSynced' might represent if it's up-to-date with the server version.
+    @ColumnInfo(defaultValue = "1") // Assume synced when downloaded
+    public boolean isSynced = true;
+
+    @Nullable
+    public Long syncedAt; // Timestamp when downloaded/updated from server
+
+    // --- Room requires a no-arg constructor ---
+    public Report() {
+        // Default constructor for Room
     }
 
-    public int getId() {
+    // --- Constructor for convenience ---
+    public Report(@NonNull String userId, @NonNull Long month, String aiSuggestion, double totalIncome, double totalExpense) {
+        this.id = UUID.randomUUID().toString();
+        this.userId = userId;
+        this.month = month;
+        this.aiSuggestion = aiSuggestion;
+        this.totalIncome = totalIncome;
+        this.totalExpense = totalExpense;
+        long now = System.currentTimeMillis();
+        this.createdAt = now;
+        this.updatedAt = now;
+        this.syncedAt = now;
+        this.isSynced = true;
+    }
+
+    // --- Getters and Setters ---
+    @NonNull
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(@NonNull String id) {
         this.id = id;
     }
 
-    public String getMonth() {
+    @NonNull
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(@NonNull String userId) {
+        this.userId = userId;
+    }
+
+    @NonNull
+    public Long getMonth() {
         return month;
     }
 
-    public void setMonth(String month) {
+    public void setMonth(@NonNull Long month) {
         this.month = month;
+    }
+
+    public String getAiSuggestion() {
+        return aiSuggestion;
+    }
+
+    public void setAiSuggestion(String aiSuggestion) {
+        this.aiSuggestion = aiSuggestion;
     }
 
     public double getTotalIncome() {
@@ -58,11 +124,47 @@ public class Report {
         this.totalExpense = totalExpense;
     }
 
-    public String getAiSuggestion() {
-        return aiSuggestion;
+    @Nullable
+    public Long getDeletedAt() {
+        return deletedAt;
     }
 
-    public void setAiSuggestion(String aiSuggestion) {
-        this.aiSuggestion = aiSuggestion;
+    public void setDeletedAt(@Nullable Long deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    @NonNull
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(@NonNull Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @NonNull
+    public Long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(@NonNull Long updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public boolean isSynced() {
+        return isSynced;
+    }
+
+    public void setSynced(boolean synced) {
+        isSynced = synced;
+    }
+
+    @Nullable
+    public Long getSyncedAt() {
+        return syncedAt;
+    }
+
+    public void setSyncedAt(@Nullable Long syncedAt) {
+        this.syncedAt = syncedAt;
     }
 }

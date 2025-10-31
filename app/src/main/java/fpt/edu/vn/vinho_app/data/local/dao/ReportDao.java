@@ -3,6 +3,7 @@ package fpt.edu.vn.vinho_app.data.local.dao;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -11,24 +12,28 @@ import java.util.List;
 import fpt.edu.vn.vinho_app.domain.model.Report;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ReportDao {
-    @Query("select * from reports")
-    Flowable<List<Report>> getAll();
+    @Query("SELECT * FROM reports WHERE userId = :userId AND deletedAt IS NULL")
+    Flowable<List<Report>> getAllReports(String userId);
 
-    @Query("select * from reports where id = :id")
-    Flowable<Report> getById(int id);
+    @Query("SELECT * FROM reports WHERE id = :id AND deletedAt IS NULL")
+    Single<Report> getReportById(String id);
 
-    @Query("Select * from reports where month = :month")
-    Flowable<List<Report>> getByMonth(String month);
+    @Query("SELECT * FROM reports WHERE month = :month AND userId = :userId AND deletedAt IS NULL")
+    Flowable<List<Report>> getReportsByMonth(String userId, Long month);
 
-    @Insert
-    Completable insert(Report report);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    Completable insertReport(Report report);
 
     @Update
-    Completable update(Report report);
+    Completable updateReport(Report report);
 
     @Delete
-    Completable delete(Report report);
+    Completable deleteReport(Report report);
+
+    @Query("UPDATE reports SET deletedAt = :timestamp WHERE id = :id")
+    Completable softDeleteReport(String id, long timestamp);
 }

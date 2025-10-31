@@ -30,6 +30,10 @@
         <activity
             android:name=".ui.activities.OnboardingActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.activities.ResetPasswordActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

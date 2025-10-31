@@ -24,7 +24,7 @@ public class AuthApiClient {
         if (retrofit == null) {
             OkHttpClient.Builder httpClient = getUnsafeOkHttpClientBuilder();
             httpClient.addInterceptor(chain -> {
-                SharedPreferences sharedPref = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
+                SharedPreferences sharedPref = context.getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
                 String token = sharedPref.getString("token", null);
                 Request original = chain.request();
                 Request.Builder requestBuilder = original.newBuilder();
