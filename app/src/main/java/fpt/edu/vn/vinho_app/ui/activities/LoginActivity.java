@@ -2,6 +2,8 @@ package fpt.edu.vn.vinho_app.ui.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -42,6 +44,7 @@ import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.ForgotPasswordRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.GoogleLoginRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.LoginRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.RegisterRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.ResetPasswordByPinRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.auth.TokenResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.repository.AuthRepository;
@@ -357,6 +360,8 @@ public class LoginActivity extends AppCompatActivity {
 
         final AlertDialog dialog = builder.create();
 
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
         btnSend.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             if (TextUtils.isEmpty(email)) {
@@ -369,10 +374,11 @@ public class LoginActivity extends AppCompatActivity {
                 public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(LoginActivity.this, "A PIN has been sent to your email", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, ResetPasswordActivity.class);
-                        intent.putExtra("email", email);
-                        startActivity(intent);
+//                        Intent intent = new Intent(LoginActivity.this, ResetPasswordActivity.class);
+//                        intent.putExtra("email", email);
+//                        startActivity(intent);
                         dialog.dismiss();
+                        showResetPasswordDialog(email);
                     } else {
                         String errorMessage = "Failed to send PIN.";
                         if (response.body() != null) {
@@ -390,5 +396,59 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         dialog.show();
+    }
+
+    private void showResetPasswordDialog(String email) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.activity_reset_password, null);
+        builder.setView(dialogView);
+
+        EditText edtPin = dialogView.findViewById(R.id.edtPin);
+        EditText edtNewPassword = dialogView.findViewById(R.id.edtNewPassword);
+        EditText edtConfirmPassword = dialogView.findViewById(R.id.edtConfirmNewPassword);
+        Button btnReset = dialogView.findViewById(R.id.btnResetPassword);
+
+        AlertDialog resetDialog = builder.create();
+        // Giữ bo góc đẹp, tránh wrap vuông
+        if (resetDialog.getWindow() != null) {
+            resetDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        btnReset.setOnClickListener(v -> {
+            String pin = edtPin.getText().toString().trim();
+            String newPassword = edtNewPassword.getText().toString().trim();
+            String confirmPassword = edtConfirmPassword.getText().toString().trim();
+
+            if (TextUtils.isEmpty(pin) || TextUtils.isEmpty(newPassword) || TextUtils.isEmpty(confirmPassword)) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!newPassword.equals(confirmPassword)) {
+                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ResetPasswordByPinRequest request = new ResetPasswordByPinRequest(email, pin, newPassword, confirmPassword);
+            AuthRepository.getAuthService(this).resetPasswordByPin(request).enqueue(new Callback<BaseResponse<String>>() {
+                @Override
+                public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Toast.makeText(LoginActivity.this, "Password reset successfully!", Toast.LENGTH_SHORT).show();
+                        resetDialog.dismiss();
+                    } else {
+                        String errorMessage = response.body() != null ? response.body().getMessage() : "Failed to reset password.";
+                        Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<BaseResponse<String>> call, Throwable t) {
+                    Toast.makeText(LoginActivity.this, "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        resetDialog.show();
     }
 }
