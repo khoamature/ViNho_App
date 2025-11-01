@@ -6,6 +6,7 @@ public class PagedResponse<T> extends BaseResponse<List<T>> {
     private int totalCount;
     private int page;
     private int pageSize;
+    private int totalPages;
 
     public int getTotalCount() {
         return totalCount;
@@ -32,9 +33,10 @@ public class PagedResponse<T> extends BaseResponse<List<T>> {
     }
 
     public int getTotalPages() {
-        if (pageSize <= 0) {
-            return 1;
-        }
-        return (int) Math.ceil((double) totalCount / pageSize);
+        return totalPages;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
     }
 }
