@@ -22,7 +22,7 @@ public interface ConversationDao {
     Single<Conversation> getConversationById(String id);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertConversation(Conversation conversation);
+    Completable insert(Conversation conversation);
 
     @Update
     Completable updateConversation(Conversation conversation);

@@ -10,21 +10,13 @@ public class GetCategoryResponse {
     private String userId;
 
     @SerializedName("name")
-    private String Name;
+    private String name;
 
     @SerializedName("description")
     private String description;
 
     @SerializedName("type")
-    private int categoryType;
-
-    public GetCategoryResponse(String id, String userId, String name, String description, int categoryType) {
-        this.id = id;
-        this.userId = userId;
-        Name = name;
-        this.description = description;
-        this.categoryType = categoryType;
-    }
+    private String categoryType;
 
     public String getId() {
         return id;
@@ -43,11 +35,11 @@ public class GetCategoryResponse {
     }
 
     public String getName() {
-        return Name;
+        return name;
     }
 
     public void setName(String name) {
-        Name = name;
+        this.name = name;
     }
 
     public String getDescription() {
@@ -58,11 +50,11 @@ public class GetCategoryResponse {
         this.description = description;
     }
 
-    public int getCategoryType() {
+    public String getCategoryType() {
         return categoryType;
     }
 
-    public void setCategoryType(int categoryType) {
+    public void setCategoryType(String categoryType) {
         this.categoryType = categoryType;
     }
 }

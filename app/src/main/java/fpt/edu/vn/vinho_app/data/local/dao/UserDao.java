@@ -19,7 +19,7 @@ public interface UserDao {
     Single<User> getUserByEmail(String email);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertUser(User user);
+    Completable insert(User user);
 
     @Update
     Completable updateUser(User user);

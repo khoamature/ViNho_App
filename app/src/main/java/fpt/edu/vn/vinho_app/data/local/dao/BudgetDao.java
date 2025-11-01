@@ -32,7 +32,7 @@ public interface BudgetDao {
     Flowable<List<Budget>> getBudgetsByCategoryId(String userId, String categoryId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertBudget(Budget budget);
+    Completable insert(Budget budget);
 
     @Update
     Completable updateBudget(Budget budget);

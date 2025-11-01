@@ -26,7 +26,7 @@ public interface ReportDao {
     Flowable<List<Report>> getReportsByMonth(String userId, Long month);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertReport(Report report);
+    Completable insert(Report report);
 
     @Update
     Completable updateReport(Report report);

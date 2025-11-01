@@ -26,7 +26,7 @@ public class Report {
     public String userId; // Mapped from Guid
 
     @NonNull
-    public Long month; // Mapped from DateOnly (store as timestamp of first day of month)
+    public String month;
 
     @ColumnInfo(defaultValue = "")
     public String aiSuggestion = "";
@@ -58,7 +58,7 @@ public class Report {
     }
 
     // --- Constructor for convenience ---
-    public Report(@NonNull String userId, @NonNull Long month, String aiSuggestion, double totalIncome, double totalExpense) {
+    public Report(@NonNull String userId, @NonNull String month, String aiSuggestion, double totalIncome, double totalExpense) {
         this.id = UUID.randomUUID().toString();
         this.userId = userId;
         this.month = month;
@@ -92,11 +92,11 @@ public class Report {
     }
 
     @NonNull
-    public Long getMonth() {
+    public String getMonth() {
         return month;
     }
 
-    public void setMonth(@NonNull Long month) {
+    public void setMonth(@NonNull String month) {
         this.month = month;
     }
 

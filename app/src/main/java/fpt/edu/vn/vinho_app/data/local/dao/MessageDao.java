@@ -18,7 +18,7 @@ public interface MessageDao {
     Flowable<List<Message>> getMessagesForConversation(String conversationId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertMessage(Message message);
+    Completable insert(Message message);
 
     @Update
     Completable updateMessage(Message message);

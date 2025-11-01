@@ -31,7 +31,7 @@ public class Category {
     @ColumnInfo(defaultValue = "")
     public String description = "";
 
-    @NonNull // Assuming CategoryType is never null
+    @NonNull
     public String type; // Mapped from enum CategoryType (store as String)
 
     // --- Audit, Soft Delete, Sync Fields ---

@@ -164,7 +164,7 @@ public class LoginActivity extends AppCompatActivity {
         String userId = UUID.randomUUID().toString();
         User newUser = new User(userId, fullName, email);
 
-        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insertUser(newUser)
+        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insert(newUser)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> {
@@ -234,7 +234,7 @@ public class LoginActivity extends AppCompatActivity {
                         User user = new User(userId, fullName, userEmail);
                         user.setSynced(true);
                         user.setSyncedAt(System.currentTimeMillis());
-                        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insertUser(user)
+                        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insert(user)
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe(() -> {},

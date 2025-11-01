@@ -29,7 +29,7 @@ public interface CategoryDao {
     Flowable<List<Category>> getCategoriesByType(String userId, String type);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertCategory(Category category);
+    Completable insert(Category category);
 
     @Update
     Completable updateCategory(Category category);

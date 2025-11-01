@@ -29,7 +29,7 @@ public interface TransactionDao {
     Flowable<List<Transaction>> getTransactionsByCategoryId(String userId, String categoryId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertTransaction(Transaction transaction);
+    Completable insert(Transaction transaction);
 
     @Update
     Completable updateTransaction(Transaction transaction);

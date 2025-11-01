@@ -36,7 +36,7 @@ public class Budget {
     public double limitAmount; // Mapped from decimal
 
     @NonNull
-    public Long month; // Mapped from DateOnly (store as timestamp of first day of month)
+    public String month;
 
     // --- Audit, Soft Delete, Sync Fields ---
     @Nullable
@@ -60,7 +60,7 @@ public class Budget {
     }
 
     // --- Constructor for convenience ---
-    public Budget(@NonNull String userId, @NonNull String categoryId, double limitAmount, @NonNull Long month) {
+    public Budget(@NonNull String userId, @NonNull String categoryId, double limitAmount, @NonNull String month) {
         this.id = UUID.randomUUID().toString();
         this.userId = userId;
         this.categoryId = categoryId;
@@ -109,11 +109,11 @@ public class Budget {
     }
 
     @NonNull
-    public Long getMonth() {
+    public String getMonth() {
         return month;
     }
 
-    public void setMonth(@NonNull Long month) {
+    public void setMonth(@NonNull String month) {
         this.month = month;
     }
 
