@@ -1,4 +1,4 @@
-package fpt.edu.vn.vinho_app.domain.application;
+package fpt.edu.vn.vinho_app.domain;
 
 import android.app.Application;
 

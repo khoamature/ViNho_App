@@ -208,7 +208,6 @@ public class TransactionFragment extends Fragment {
         });
     }
 
-
     private void fetchTransactions() {
         swipeRefreshLayout.setRefreshing(true);
         String userId = sharedPreferences.getString("userId", "");
