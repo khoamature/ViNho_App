@@ -32,29 +32,28 @@ public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
     private TextView emailTextView;
     private EditText fullNameEditText;
-    private TextView createdAtTextView;
+    private TextView createdAtTextView, fullNameTextView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private SharedPreferences sharedPreferences;
-    private Button btnEdit;
-    private Button btnSave;
+    private Button btnEditSave;
+    private boolean isEditMode = false; // trạng thái toggle
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
-        emailTextView = view.findViewById(R.id.emailTextView);
+        emailTextView = view.findViewById(R.id.tvEmail);
         fullNameEditText = view.findViewById(R.id.fullNameEditText);
-        createdAtTextView = view.findViewById(R.id.createdAtTextView);
+        fullNameTextView = view.findViewById(R.id.tvFullName);
+        createdAtTextView = view.findViewById(R.id.tvCreateAt);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
         Button btnLogout = view.findViewById(R.id.btnLogout);
-        btnEdit = view.findViewById(R.id.btnEdit);
-        btnSave = view.findViewById(R.id.btnSave);
+        btnEditSave = view.findViewById(R.id.btnEditSave);
 
         swipeRefreshLayout.setOnRefreshListener(this::fetchProfile);
 
         btnLogout.setOnClickListener(v -> logout());
-        btnEdit.setOnClickListener(v -> enableEditMode());
-        btnSave.setOnClickListener(v -> updateProfile());
+        btnEditSave.setOnClickListener(v -> toggleEditSave());
 
         return view;
     }
@@ -84,6 +83,7 @@ public class ProfileFragment extends Fragment {
                     if (response.body().isSuccess()) {
                         GetProfileResponse profile = response.body().getPayload();
                         emailTextView.setText(profile.getEmail());
+                        fullNameTextView.setText(profile.getFullName());
                         fullNameEditText.setText(profile.getFullName());
                         createdAtTextView.setText(profile.getCreatedAt());
                     } else {
@@ -103,11 +103,18 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void enableEditMode() {
-        fullNameEditText.setFocusableInTouchMode(true);
-        fullNameEditText.requestFocus();
-        btnSave.setVisibility(View.VISIBLE);
-        btnEdit.setVisibility(View.GONE);
+    private void toggleEditSave() {
+        if (!isEditMode) {
+            // Chuyển sang chế độ chỉnh sửa
+            fullNameEditText.setFocusableInTouchMode(true);
+            fullNameEditText.requestFocus();
+            btnEditSave.setText("Save");
+            btnEditSave.setBackgroundTintList(getResources().getColorStateList(R.color.black));
+            isEditMode = true;
+        } else {
+            // Gọi API update
+            updateProfile();
+        }
     }
 
     private void updateProfile() {
@@ -146,8 +153,9 @@ public class ProfileFragment extends Fragment {
 
     private void disableEditMode() {
         fullNameEditText.setFocusable(false);
-        btnSave.setVisibility(View.GONE);
-        btnEdit.setVisibility(View.VISIBLE);
+        btnEditSave.setText("Edit");
+        btnEditSave.setBackgroundTintList(getResources().getColorStateList(R.color.black));
+        isEditMode = false;
     }
 
     private void logout() {
