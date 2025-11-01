@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.domain.model.OnboardingItem;
+import fpt.edu.vn.vinho_app.ui.viewmodel.OnboardingItem;
 
 public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.OnboardingViewHolder>{
     private final List<OnboardingItem> onboardingItems;

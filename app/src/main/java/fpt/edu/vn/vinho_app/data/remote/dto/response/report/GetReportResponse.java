@@ -15,6 +15,37 @@ public class GetReportResponse {
     private double totalIncome;
     @SerializedName("totalExpense")
     private double totalExpense;
+    // audit fields
+    @SerializedName("createdAt")
+    private String createdAt;
+    @SerializedName("updatedAt")
+    private String updatedAt;
+    @SerializedName("deletedAt")
+    private String deletedAt;
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(String deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 
     public String getId() {
         return id;

@@ -1,11 +1,39 @@
 package fpt.edu.vn.vinho_app.data.remote.dto.response.user;
 
+import com.google.gson.annotations.SerializedName;
+
 public class GetProfileResponse {
+    @SerializedName("id")
     private String id;
+    @SerializedName("email")
     private String email;
+    @SerializedName("fullName")
     private String fullName;
-    private String createdAt;
+    @SerializedName("isActive")
     private boolean isActive;
+    // audit fields
+    @SerializedName("createdAt")
+    private String createdAt;
+    @SerializedName("updatedAt")
+    private String updatedAt;
+    @SerializedName("deletedAt")
+    private String deletedAt;
+
+    public String getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(String deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     public String getId() {
         return id;

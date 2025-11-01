@@ -9,10 +9,21 @@ public class GetConversationResponse {
     private String userId;
     @SerializedName("title")
     private String title;
+    // audit fields
     @SerializedName("createdAt")
     private String createdAt;
     @SerializedName("updatedAt")
     private String updatedAt;
+    @SerializedName("deletedAt")
+    private String deletedAt;
+
+    public String getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(String deletedAt) {
+        this.deletedAt = deletedAt;
+    }
 
     public String getId() {
         return id;

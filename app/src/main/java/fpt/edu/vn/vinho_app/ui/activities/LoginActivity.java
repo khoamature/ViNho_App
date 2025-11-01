@@ -39,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.data.local.DatabaseClient;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.ForgotPasswordRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.GoogleLoginRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.LoginRequest;
@@ -48,10 +47,7 @@ import fpt.edu.vn.vinho_app.data.remote.dto.request.auth.ResetPasswordByPinReque
 import fpt.edu.vn.vinho_app.data.remote.dto.response.auth.TokenResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.repository.AuthRepository;
-import fpt.edu.vn.vinho_app.domain.model.User;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -160,51 +156,6 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        String userId = UUID.randomUUID().toString();
-        User newUser = new User(userId, fullName, email);
-
-        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insert(newUser)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> {
-                    syncUserWithServer(newUser);
-                }, throwable -> {
-                    Toast.makeText(this, "Failed to save user locally.", Toast.LENGTH_SHORT).show();
-                }));
-    }
-
-    private void syncUserWithServer(User user) {
-        RegisterRequest registerRequest = new RegisterRequest(user.getEmail(), user.getFullName(), user.getEmail(), "", "https://localhost:7027/api/verify-email", user.getUserId());
-        Call<BaseResponse<String>> call = AuthRepository.getAuthService(getApplicationContext()).register(registerRequest);
-
-        call.enqueue(new Callback<BaseResponse<String>>() {
-            @Override
-            public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
-                if(response.isSuccessful() && response.body() != null && response.body().isSuccess()){
-                    user.setSynced(true);
-                    user.setSyncedAt(System.currentTimeMillis());
-                    compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().updateUser(user)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(() -> {},
-                                    throwable -> {}));
-
-                    Toast.makeText(LoginActivity.this, "Registration successful. Please check your email for verification.", Toast.LENGTH_LONG).show();
-                }else{
-                    String errorMessage = "Registration failed.";
-                    if (response.body() != null) {
-                        errorMessage = response.body().getMessage();
-                    }
-                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<BaseResponse<String>> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void handleLogin() {
@@ -228,18 +179,6 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         JSONObject payload = new JSONObject(new String(Base64.decode(accessToken.split("\\.")[1], Base64.URL_SAFE), StandardCharsets.UTF_8));
                         userId = payload.getString("id");
-                        String userEmail = payload.getString("email");
-                        String fullName = payload.optString("fullName", "");
-
-                        User user = new User(userId, fullName, userEmail);
-                        user.setSynced(true);
-                        user.setSyncedAt(System.currentTimeMillis());
-                        compositeDisposable.add(DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().userDao().insert(user)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(() -> {},
-                                        throwable -> {}));
-
                     } catch (JSONException e) {
                         Log.e("JWT_DECODE_ERROR", "Failed to decode JWT", e);
                     }

@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Locale;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.adapter.TransactionAdapter;
+import fpt.edu.vn.vinho_app.ui.adapter.TransactionAdapter;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoryRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.GetPagedTransactionsRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;

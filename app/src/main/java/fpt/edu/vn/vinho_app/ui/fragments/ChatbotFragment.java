@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.adapter.ChatAdapter;
+import fpt.edu.vn.vinho_app.ui.adapter.ChatAdapter;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.ragchat.ChatRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat.ChatResponse;
 import fpt.edu.vn.vinho_app.data.repository.RagChatRepository;

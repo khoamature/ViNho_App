@@ -43,10 +43,10 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     // Room
-    val room_version = "2.8.3"
-    implementation("androidx.room:room-runtime:${room_version}")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-rxjava3:${room_version}")
+//    val room_version = "2.8.3"
+//    implementation("androidx.room:room-runtime:${room_version}")
+//    annotationProcessor("androidx.room:room-compiler:$room_version")
+//    implementation("androidx.room:room-rxjava3:${room_version}")
 
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))

@@ -17,7 +17,7 @@ import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.ui.adapter.OnboardingAdapter;
-import fpt.edu.vn.vinho_app.domain.model.OnboardingItem;
+import fpt.edu.vn.vinho_app.ui.viewmodel.OnboardingItem;
 
 public class OnboardingActivity extends AppCompatActivity {
     //Khai bao

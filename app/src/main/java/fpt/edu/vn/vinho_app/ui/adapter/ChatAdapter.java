@@ -1,4 +1,4 @@
-package fpt.edu.vn.vinho_app.adapter;
+package fpt.edu.vn.vinho_app.ui.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
