@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.ViNho_App" parent="Base.Theme.ViNho_App" />
+
+    <style name="FullScreenMaterialDatePicker" parent="ThemeOverlay.MaterialComponents.MaterialCalendar.Fullscreen">
+        <item name="android:windowIsFloating">false</item>
+    </style>
 </resources>
