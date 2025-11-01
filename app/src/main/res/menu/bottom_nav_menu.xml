@@ -6,9 +6,9 @@
         android:title="Home" />
 
     <item
-        android:id="@+id/nav_budget"
-        android:icon="@drawable/ic_budget"
-        android:title="Budget" />
+        android:id="@+id/nav_transaction"
+        android:icon="@drawable/ic_transaction"
+        android:title="Transaction" />
 
     <!-- Empty placeholder for center FAB -->
     <item
@@ -17,9 +17,9 @@
         android:title="" />
 
     <item
-        android:id="@+id/nav_insights"
-        android:icon="@drawable/ic_insights"
-        android:title="Insights" />
+        android:id="@+id/nav_budget"
+        android:icon="@drawable/ic_budget"
+        android:title="Budget" />
 
     <item
         android:id="@+id/nav_profile"

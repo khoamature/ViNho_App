@@ -1,5 +1,6 @@
 package fpt.edu.vn.vinho_app.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.widget.Toast;
@@ -11,10 +12,12 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
 
 import fpt.edu.vn.vinho_app.R;
+import fpt.edu.vn.vinho_app.ui.fragments.AddTransactionFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.BudgetFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.HomeFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.InsightsFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.ProfileFragment;
+import fpt.edu.vn.vinho_app.ui.fragments.TransactionFragment;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
@@ -33,19 +36,8 @@ public class MainActivity extends AppCompatActivity {
         // FAB click với animation
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {
-                Toast.makeText(this, "Add clicked", Toast.LENGTH_SHORT).show();
-
-                // Animation nhấn
-                v.animate()
-                        .scaleX(0.85f)
-                        .scaleY(0.85f)
-                        .setDuration(100)
-                        .withEndAction(() -> v.animate()
-                                .scaleX(1f)
-                                .scaleY(1f)
-                                .setDuration(100)
-                                .start())
-                        .start();
+                AddTransactionFragment addTransactionFragment = new AddTransactionFragment();
+                addTransactionFragment.show(getSupportFragmentManager(), "add_transaction");
             });
         }
 
@@ -67,16 +59,16 @@ public class MainActivity extends AppCompatActivity {
                 int itemId = item.getItemId();
                 if (itemId == R.id.nav_home) {
                     selectedFragment = new HomeFragment();
-                } else if (itemId == R.id.nav_budget) {
+                } else if (itemId == R.id.nav_transaction) {
+                    selectedFragment = new TransactionFragment();
+                }
+                else if (itemId == R.id.nav_budget) {
                     selectedFragment = new BudgetFragment();
-                } else if (itemId == R.id.nav_insights) {
-                    selectedFragment = new InsightsFragment();
                 } else if (itemId == R.id.nav_profile) {
                     selectedFragment = new ProfileFragment();
                 } else if (itemId == R.id.nav_placeholder) {
                     return false;
                 }
-
                 return loadFragment(selectedFragment);
             });
         }
