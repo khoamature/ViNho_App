@@ -34,10 +34,12 @@ import java.util.Locale;
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.CreateBudgetRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetPagedBudgetsRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.UpdateBudgetRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoriesRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.BudgetOverviewResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.CategoryOverview;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.GetBudgetResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.category.GetCategoryResponse;
 import fpt.edu.vn.vinho_app.data.repository.BudgetRepository;
@@ -47,7 +49,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class BudgetFragment extends Fragment {
+public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetActionsListener{
     private RecyclerView recyclerCategories;
     private BudgetAdapter adapter;
     private LinearLayout layoutEmptyState;
@@ -77,7 +79,7 @@ public class BudgetFragment extends Fragment {
 
         // You will need to adjust your BudgetAdapter to accept a List<CategoryOverview>
         // Or create a new adapter. For this example, I'll assume it can be adapted.
-        adapter = new BudgetAdapter(new ArrayList<>());
+        adapter = new BudgetAdapter(new ArrayList<>(), this);
         recyclerCategories.setAdapter(adapter);
 
         // Fetch data
@@ -88,6 +90,164 @@ public class BudgetFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onEditBudget(CategoryOverview budget) {
+        if (budget.getBudgetId() == null) {
+            Toast.makeText(getContext(), "Budget ID is missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 1. Gọi API để lấy thông tin chi tiết nhất của budget
+        BudgetRepository.getBudgetService(getContext()).getBudgetById(budget.getBudgetId())
+                .enqueue(new Callback<BaseResponse<GetBudgetResponse>>() {
+                    @Override
+                    public void onResponse(Call<BaseResponse<GetBudgetResponse>> call, Response<BaseResponse<GetBudgetResponse>> response) {
+                        if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                            // 2. Sau khi có dữ liệu, mở dialog edit
+                            showEditBudgetDialog(response.body().getPayload());
+                        } else {
+                            Toast.makeText(getContext(), "Failed to fetch budget details", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<BaseResponse<GetBudgetResponse>> call, Throwable t) {
+                        Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    @Override
+    public void onDeleteBudget(CategoryOverview budget) {
+        // Hiển thị dialog xác nhận xóa
+        new AlertDialog.Builder(getContext())
+                .setTitle("Delete Budget")
+                .setMessage("Are you sure you want to delete the budget for '" + budget.getCategoryName() + "'?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    // SỬA LỖI Ở ĐÂY: Truyền budgetId thay vì categoryId
+                    if (budget.getBudgetId() != null) {
+                        deleteBudget(budget.getBudgetId());
+                    } else {
+                        Toast.makeText(getContext(), "Budget ID is missing for deletion", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // SỬA LẠI: showEditBudgetDialog giờ sẽ nhận vào đối tượng GetBudgetResponse
+    private void showEditBudgetDialog(GetBudgetResponse budgetDetails) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_budget, null);
+        builder.setView(dialogView);
+        builder.setTitle("Edit Budget");
+
+        // Ánh xạ các view trong dialog
+        MaterialButtonToggleGroup toggleGroup = dialogView.findViewById(R.id.toggleGroupType);
+        AutoCompleteTextView actvDialogCategory = dialogView.findViewById(R.id.actvCategory);
+        EditText etDialogLimitAmount = dialogView.findViewById(R.id.etLimitAmount);
+        Button btnDialogMonthPicker = dialogView.findViewById(R.id.btnMonthPicker);
+
+        // 3. Ẩn nút chọn tháng
+        btnDialogMonthPicker.setVisibility(View.GONE);
+
+        // 4. Điền dữ liệu có sẵn
+        etDialogLimitAmount.setText(String.valueOf(budgetDetails.getLimitAmount()));
+        actvDialogCategory.setText(budgetDetails.getCategoryName()); // Lấy từ API, chính xác hơn
+
+        // 5. Logic xử lý chọn Type và Category động
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
+        actvDialogCategory.setAdapter(categoryAdapter);
+
+        // 6. Tự động chọn đúng nút Type dựa trên dữ liệu từ API
+        String initialType = budgetDetails.getCategoryType() != null ? budgetDetails.getCategoryType() : "Expense";
+        if ("Income".equalsIgnoreCase(initialType)) {
+            toggleGroup.check(R.id.btnIncome);
+        } else if ("Neutral".equalsIgnoreCase(initialType)) {
+            toggleGroup.check(R.id.btnNeutral);
+        } else {
+            toggleGroup.check(R.id.btnExpense);
+        }
+        selectedCategoryType = initialType;
+        // Tải danh sách category cho lần đầu tiên
+        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
+
+        // Thêm listener để tải lại category khi người dùng đổi Type
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                if (checkedId == R.id.btnExpense) selectedCategoryType = "Expense";
+                else if (checkedId == R.id.btnIncome) selectedCategoryType = "Income";
+                else if (checkedId == R.id.btnNeutral) selectedCategoryType = "Neutral";
+                fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
+            }
+        });
+
+        // Xử lý khi nhấn nút "Save"
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newCategoryName = actvDialogCategory.getText().toString();
+            String newCategoryId = null;
+
+            // Tìm ID của category được chọn
+            for (GetCategoryResponse category : categoryList) {
+                if (category.getName().equals(newCategoryName)) {
+                    newCategoryId = category.getId();
+                    break;
+                }
+            }
+
+            // Nếu người dùng không thay đổi category, giữ lại ID cũ
+            if (newCategoryId == null) {
+                newCategoryId = budgetDetails.getCategoryId();
+            }
+
+            double newLimit = Double.parseDouble(etDialogLimitAmount.getText().toString());
+
+            // Gọi API cập nhật với ID của budget
+            updateBudget(budgetDetails.getId(), newCategoryId, newLimit);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.create().show();
+    }
+
+
+    // 3. Các phương thức gọi API
+    private void deleteBudget(String budgetId) {
+        BudgetRepository.getBudgetService(getContext()).deleteBudget(budgetId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Budget deleted successfully", Toast.LENGTH_SHORT).show();
+                    fetchBudgetOverview(); // Làm mới lại danh sách
+                } else {
+                    Toast.makeText(getContext(), "Failed to delete budget", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateBudget(String budgetId, String newCategoryId, double newLimitAmount) {
+        // Tạo một DTO mới cho request body của việc update
+        UpdateBudgetRequest request = new UpdateBudgetRequest(newCategoryId, newLimitAmount);
+        BudgetRepository.getBudgetService(getContext()).updateBudget(budgetId, request).enqueue(new Callback<BaseResponse<String>>() {
+            @Override
+            public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
+                if (response.isSuccessful() && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Budget updated successfully", Toast.LENGTH_SHORT).show();
+                    fetchBudgetOverview(); // Làm mới lại danh sách
+                } else {
+                    Toast.makeText(getContext(), "Failed to update budget", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<BaseResponse<String>> call, Throwable t) {
+                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
     // This is a helper method to format currency
     private String formatCurrency(double amount) {
         DecimalFormat formatter = new DecimalFormat("#,###đ");
@@ -159,9 +319,8 @@ public class BudgetFragment extends Fragment {
         });
     }
 
-    private void fetchCategoriesForDialog(String type, AutoCompleteTextView actv, ArrayAdapter<String> adapter) {
+    private void fetchCategoriesForDialog(String type, AutoCompleteTextView actv, ArrayAdapter<String> adapter, boolean clearCurrentSelection) {
         String userId = sharedPreferences.getString("userId", "");
-        // API của bạn dùng query parameter, không phải request body
         CategoryRepository.getCategoryService(getContext()).getCategories(type, userId).enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
             @Override
             public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
@@ -173,11 +332,14 @@ public class BudgetFragment extends Fragment {
                     for (GetCategoryResponse category : categoryList) {
                         categoryNames.add(category.getName());
                     }
-                    // Cập nhật lại adapter và AutoCompleteTextView
                     adapter.clear();
                     adapter.addAll(categoryNames);
                     adapter.notifyDataSetChanged();
-                    actv.setText("", false); // Xóa lựa chọn cũ
+
+                    // SỬA LỖI Ở ĐÂY: Chỉ xóa text khi được yêu cầu
+                    if (clearCurrentSelection) {
+                        actv.setText("", false); // Xóa lựa chọn cũ
+                    }
                 } else {
                     Toast.makeText(getContext(), "Failed to fetch categories", Toast.LENGTH_SHORT).show();
                 }
@@ -246,7 +408,7 @@ public class BudgetFragment extends Fragment {
         // 2. Mặc định chọn Expense và fetch category cho nó
         toggleGroup.check(R.id.btnExpense);
         selectedCategoryType = "Expense";
-        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter);
+        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
 
         // 3. Thêm Listener cho nhóm nút Type
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -259,7 +421,7 @@ public class BudgetFragment extends Fragment {
                     selectedCategoryType = "Neutral";
                 }
                 // Fetch lại category mỗi khi đổi type
-                fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter);
+                fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
             }
         });
 

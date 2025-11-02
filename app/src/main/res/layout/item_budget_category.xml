@@ -34,7 +34,7 @@
             app:layout_constraintStart_toEndOf="@+id/ivCategoryIcon"
             app:layout_constraintTop_toTopOf="@+id/ivCategoryIcon" />
 
-        <!-- THÊM MỚI: TextView để hiển thị phần trăm -->
+        <!-- TextView để hiển thị phần trăm -->
         <TextView
             android:id="@+id/tvUsedPercentage"
             android:layout_width="wrap_content"
@@ -52,11 +52,22 @@
             android:id="@+id/tvLimitAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="500.000đ"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/btnMenu"
+            app:layout_constraintTop_toTopOf="@+id/tvCategoryName"
+            android:text="/ 200.000đ" />
+
+        <ImageView
+            android:id="@+id/btnMenu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_right"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvCategoryName" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?android:attr/textColorSecondary" />
 
         <ProgressBar
             android:id="@+id/progressBar"

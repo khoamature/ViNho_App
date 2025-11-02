@@ -1,6 +1,7 @@
 package fpt.edu.vn.vinho_app.data.remote.dto.response.budget;
 
 public class CategoryOverview {
+    private String budgetId;
     private String categoryId;
     private String categoryName;
     private double budgetedAmount;
@@ -8,6 +9,14 @@ public class CategoryOverview {
     private double remainingAmount;
 
     // Getters and setters for all fields
+
+    public String getBudgetId() {
+        return budgetId;
+    }
+
+    public void setBudgetId(String budgetId) {
+        this.budgetId = budgetId;
+    }
 
     public String getCategoryId() {
         return categoryId;

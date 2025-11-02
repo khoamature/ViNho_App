@@ -3,10 +3,12 @@ package fpt.edu.vn.vinho_app.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DecimalFormat;
@@ -22,10 +24,17 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
     // 1. Thay đổi kiểu dữ liệu của list
     private List<CategoryOverview> budgetList;
+    private final OnBudgetActionsListener listener;
+
+    public interface OnBudgetActionsListener {
+        void onEditBudget(CategoryOverview budget);
+        void onDeleteBudget(CategoryOverview budget);
+    }
 
     // 2. Cập nhật constructor
-    public BudgetAdapter(List<CategoryOverview> budgetList) {
+    public BudgetAdapter(List<CategoryOverview> budgetList, OnBudgetActionsListener listener) {
         this.budgetList = budgetList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -39,7 +48,7 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
     public void onBindViewHolder(@NonNull BudgetViewHolder holder, int position) {
         // 3. Lấy đối tượng CategoryOverview
         CategoryOverview budget = budgetList.get(position);
-        holder.bind(budget);
+        holder.bind(budget, listener);
     }
 
     @Override
@@ -61,6 +70,8 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
         TextView tvCategoryName, tvSpentAmount, tvBudgetedAmount, tvRemainingAmount, tvUsedPercentage;
         ProgressBar progressBar;
 
+        ImageView btnMenu;
+
         public BudgetViewHolder(@NonNull View itemView) {
             super(itemView);
             // Ánh xạ view
@@ -70,15 +81,34 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             tvRemainingAmount = itemView.findViewById(R.id.tvRemainingAmount);
             progressBar = itemView.findViewById(R.id.progressBar);
             tvUsedPercentage = itemView.findViewById(R.id.tvUsedPercentage);
+            btnMenu = itemView.findViewById(R.id.btnMenu);
         }
 
         // Phương thức bind dữ liệu
-        public void bind(CategoryOverview budget) {
+        public void bind(CategoryOverview budget, final OnBudgetActionsListener listener) {
             tvCategoryName.setText(budget.getCategoryName());
             tvSpentAmount.setText(formatCurrency(budget.getSpentAmount()));
             tvBudgetedAmount.setText(String.format("/ %s", formatCurrency(budget.getBudgetedAmount())));
             tvRemainingAmount.setText(String.format("Còn lại %s", formatCurrency(budget.getRemainingAmount())));
 
+            btnMenu.setOnClickListener(view -> {
+                PopupMenu popup = new PopupMenu(view.getContext(), btnMenu);
+                popup.getMenuInflater().inflate(R.menu.budget_item_menu, popup.getMenu()); // Cần tạo file menu này
+
+                popup.setOnMenuItemClickListener(item -> {
+                    int itemId = item.getItemId();
+                    if (itemId == R.id.menu_edit) {
+                        listener.onEditBudget(budget);
+                        return true;
+                    } else if (itemId == R.id.menu_delete) {
+                        listener.onDeleteBudget(budget);
+                        return true;
+                    }
+                    return false;
+                });
+
+                popup.show();
+            });
             // Tính toán và cập nhật progress bar
             if (budget.getBudgetedAmount() > 0) {
                 // Đảm bảo phép chia là số thực để có kết quả chính xác
