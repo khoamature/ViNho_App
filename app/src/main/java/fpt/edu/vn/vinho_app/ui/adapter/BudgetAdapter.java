@@ -3,21 +3,27 @@ package fpt.edu.vn.vinho_app.ui.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.GetBudgetResponse;
+// Import lớp DTO mới
+import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.CategoryOverview;
 
+// Thay đổi kiểu dữ liệu mà Adapter quản lý từ GetBudgetResponse thành CategoryOverview
 public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetViewHolder> {
 
-    private List<GetBudgetResponse> budgetList;
+    // 1. Thay đổi kiểu dữ liệu của list
+    private List<CategoryOverview> budgetList;
 
-    public BudgetAdapter(List<GetBudgetResponse> budgetList) {
+    // 2. Cập nhật constructor
+    public BudgetAdapter(List<CategoryOverview> budgetList) {
         this.budgetList = budgetList;
     }
 
@@ -30,31 +36,61 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
     @Override
     public void onBindViewHolder(@NonNull BudgetViewHolder holder, int position) {
-        GetBudgetResponse budget = budgetList.get(position);
-        holder.tvCategoryName.setText(budget.getCategoryId()); // You might want to resolve this to a category name
-        holder.tvLimitAmount.setText(String.valueOf(budget.getLimitAmount()));
-        holder.tvSpentAmount.setText("0"); // You need to calculate this
+        // 3. Lấy đối tượng CategoryOverview
+        CategoryOverview budget = budgetList.get(position);
+        holder.bind(budget);
     }
 
     @Override
     public int getItemCount() {
-        return budgetList.size();
+        // Đảm bảo list không null để tránh NullPointerException
+        return budgetList != null ? budgetList.size() : 0;
     }
 
-    static class BudgetViewHolder extends RecyclerView.ViewHolder {
-        TextView tvCategoryName, tvLimitAmount, tvSpentAmount;
+    // 4. Tạo phương thức updateData để nhận dữ liệu mới
+    public void updateData(List<CategoryOverview> newBudgetList) {
+        this.budgetList.clear();
+        this.budgetList.addAll(newBudgetList);
+        notifyDataSetChanged(); // Báo cho RecyclerView biết dữ liệu đã thay đổi
+    }
+
+    // Lớp ViewHolder
+    public static class BudgetViewHolder extends RecyclerView.ViewHolder {
+        // Khai báo các view trong item_budget.xml (tên có thể khác)
+        TextView tvCategoryName, tvSpentAmount, tvBudgetedAmount, tvRemainingAmount;
+        ProgressBar progressBar;
 
         public BudgetViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
-            tvLimitAmount = itemView.findViewById(R.id.tvLimitAmount);
+            // Ánh xạ view
+            tvCategoryName = itemView.findViewById(R.id.tvCategoryName); // Thay R.id cho đúng
             tvSpentAmount = itemView.findViewById(R.id.tvSpentAmount);
+            tvBudgetedAmount = itemView.findViewById(R.id.tvLimitAmount);
+            tvRemainingAmount = itemView.findViewById(R.id.tvRemainingAmount);
+            progressBar = itemView.findViewById(R.id.progressBar);
+        }
+
+        // Phương thức bind dữ liệu
+        public void bind(CategoryOverview budget) {
+            tvCategoryName.setText(budget.getCategoryName());
+            tvSpentAmount.setText(formatCurrency(budget.getSpentAmount()));
+            tvBudgetedAmount.setText(String.format("/ %s", formatCurrency(budget.getBudgetedAmount())));
+            tvRemainingAmount.setText(String.format("Còn lại %s", formatCurrency(budget.getRemainingAmount())));
+
+            // Tính toán và cập nhật progress bar
+            if (budget.getBudgetedAmount() > 0) {
+                // Đảm bảo phép chia là số thực để có kết quả chính xác
+                double progressValue = (budget.getSpentAmount() / budget.getBudgetedAmount()) * 100.0;
+                progressBar.setProgress((int) progressValue);
+            } else {
+                progressBar.setProgress(0);
+            }
+        }
+
+        // Helper method để format tiền tệ
+        private String formatCurrency(double amount) {
+            DecimalFormat formatter = new DecimalFormat("#,###đ");
+            return formatter.format(amount);
         }
     }
-    public void updateData(List<GetBudgetResponse> newBudgets) {
-        this.budgetList.clear();
-        this.budgetList.addAll(newBudgets);
-        notifyDataSetChanged();
-    }
-
 }

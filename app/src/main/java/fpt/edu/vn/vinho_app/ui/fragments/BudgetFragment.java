@@ -13,6 +13,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,6 +35,7 @@ import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetPagedBudgetsReques
 import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoriesRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.BudgetOverviewResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.budget.GetBudgetResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.category.GetCategoryResponse;
 import fpt.edu.vn.vinho_app.data.repository.BudgetRepository;
@@ -46,10 +49,9 @@ public class BudgetFragment extends Fragment {
     private RecyclerView recyclerCategories;
     private BudgetAdapter adapter;
     private LinearLayout layoutEmptyState;
-    private AutoCompleteTextView actvCategory, actvCategoryType;
-    private EditText etMinAmount, etMaxAmount;
-    private Button btnFromMonth, btnToMonth, btnApplyFilters, btnAddCategory;
+    private TextView tvLimitAmount, tvSpentAmount; // Add TextViews for overview
 
+    private Button btnAddCategory;
     private SharedPreferences sharedPreferences;
     private List<GetCategoryResponse> categoryList = new ArrayList<>();
     private String selectedMonth;
@@ -60,31 +62,136 @@ public class BudgetFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_budget, container, false);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
+        // Initialize views
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
         layoutEmptyState = view.findViewById(R.id.layoutEmptyState);
-
-        actvCategory = view.findViewById(R.id.actvCategory);
-        actvCategoryType = view.findViewById(R.id.actvCategoryType);
-        etMinAmount = view.findViewById(R.id.etMinAmount);
-        etMaxAmount = view.findViewById(R.id.etMaxAmount);
-        btnFromMonth = view.findViewById(R.id.btnFromMonth);
-        btnToMonth = view.findViewById(R.id.btnToMonth);
-        btnApplyFilters = view.findViewById(R.id.btnApplyFilters);
+        tvLimitAmount = view.findViewById(R.id.tvLimitAmount);
+        tvSpentAmount = view.findViewById(R.id.tvSpentAmount);
         btnAddCategory = view.findViewById(R.id.btnAddCategory);
 
+        // You will need to adjust your BudgetAdapter to accept a List<CategoryOverview>
+        // Or create a new adapter. For this example, I'll assume it can be adapted.
         adapter = new BudgetAdapter(new ArrayList<>());
         recyclerCategories.setAdapter(adapter);
 
-        setupFilters();
-        fetchCategories();
+        // Fetch data
+        fetchCategoriesForDialog(); // Renamed to avoid confusion
+        fetchBudgetOverview();
 
-        btnApplyFilters.setOnClickListener(v -> fetchBudgets());
         btnAddCategory.setOnClickListener(v -> showAddBudgetDialog());
 
-        fetchBudgets();
-
         return view;
+    }
+
+    // This is a helper method to format currency
+    private String formatCurrency(double amount) {
+        DecimalFormat formatter = new DecimalFormat("#,###đ");
+        return formatter.format(amount);
+    }
+
+    private void fetchBudgetOverview() {
+        GetPagedBudgetsRequest request = new GetPagedBudgetsRequest();
+        String userId = sharedPreferences.getString("userId", "");
+        request.setUserId(userId);
+
+        BudgetRepository.getBudgetService(getContext()).getBudgetOverview(request).enqueue(new Callback<BaseResponse<BudgetOverviewResponse>>() {
+            @Override
+            public void onResponse(Call<BaseResponse<BudgetOverviewResponse>> call, Response<BaseResponse<BudgetOverviewResponse>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    BudgetOverviewResponse overview = response.body().getPayload();
+
+                    if (overview != null && overview.getCategoryOverviews() != null && !overview.getCategoryOverviews().isEmpty()) {
+                        // Update overview card
+                        tvLimitAmount.setText(formatCurrency(overview.getTotalBudgetedAmount()));
+                        tvSpentAmount.setText(formatCurrency(overview.getTotalSpentAmount()));
+
+                        // Update RecyclerView
+                        layoutEmptyState.setVisibility(View.GONE);
+                        recyclerCategories.setVisibility(View.VISIBLE);
+                        adapter.updateData(overview.getCategoryOverviews()); // You need to implement this method in your adapter
+
+                    } else {
+                        // Show empty state
+                        tvLimitAmount.setText("0đ");
+                        tvSpentAmount.setText("0đ");
+                        layoutEmptyState.setVisibility(View.VISIBLE);
+                        recyclerCategories.setVisibility(View.GONE);
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to fetch budget overview", Toast.LENGTH_SHORT).show();
+                    layoutEmptyState.setVisibility(View.VISIBLE);
+                    recyclerCategories.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse<BudgetOverviewResponse>> call, Throwable t) {
+                Toast.makeText(getContext(), "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                layoutEmptyState.setVisibility(View.VISIBLE);
+                recyclerCategories.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void createBudget(String categoryId, double limitAmount, String month) {
+        String userId = sharedPreferences.getString("userId", "");
+        CreateBudgetRequest request = new CreateBudgetRequest(userId, categoryId, limitAmount, month);
+        BudgetRepository.getBudgetService(getContext()).createBudget(request).enqueue(new Callback<BaseResponse<String>>() {
+            @Override
+            public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Budget created successfully!", Toast.LENGTH_SHORT).show();
+                    fetchBudgetOverview(); // Refresh the overview and list
+                } else {
+                    Toast.makeText(getContext(), "Failed to create budget", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse<String>> call, Throwable t) {
+                Toast.makeText(getContext(), "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Renamed this method
+    private void fetchCategoriesForDialog() {
+        String userId = sharedPreferences.getString("userId", "");
+        GetPagedCategoriesRequest request = new GetPagedCategoriesRequest(userId);
+
+        CategoryRepository.getCategoryService(getContext()).getCategories(request).enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
+            @Override
+            public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
+                // Your logic to handle a successful response goes here.
+                // You will now work with a 'response' object containing a 'PagedResponse<GetCategoryResponse>>'.
+                if (response.isSuccessful()) {
+                    PagedResponse<GetCategoryResponse> pagedResponse = response.body();
+                    if (pagedResponse != null) {
+                        // Access your data from the pagedResponse object
+                    }
+                } else {
+                    // Handle API error (e.g., 404, 500)
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
+                // Your logic to handle a network failure (e.g., no internet) goes here.
+            }
+        });
+    }
+
+    private void showMonthPickerDialog() {
+        final Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int month = c.get(Calendar.MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
+                (view, year1, monthOfYear, dayOfMonth) -> {
+                    selectedMonth = year1 + "-" + String.format(Locale.getDefault(), "%02d", monthOfYear + 1) + "-01";
+                }, year, month, 1);
+        datePickerDialog.show();
     }
 
     private void showAddBudgetDialog() {
@@ -122,6 +229,10 @@ public class BudgetFragment extends Fragment {
                         Toast.makeText(getContext(), "Please select a category", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    if (selectedMonth == null || selectedMonth.isEmpty()) {
+                        Toast.makeText(getContext(), "Please select a month", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     double limitAmount = Double.parseDouble(etDialogLimitAmount.getText().toString());
 
                     createBudget(categoryId, limitAmount, selectedMonth);
@@ -129,156 +240,5 @@ public class BudgetFragment extends Fragment {
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         builder.create().show();
-    }
-
-    private void createBudget(String categoryId, double limitAmount, String month) {
-        String userId = sharedPreferences.getString("userId", "");
-        CreateBudgetRequest request = new CreateBudgetRequest(userId, categoryId, limitAmount, month);
-        BudgetRepository.getBudgetService(getContext()).createBudget(request).enqueue(new Callback<BaseResponse<String>>() {
-            @Override
-            public void onResponse(Call<BaseResponse<String>> call, Response<BaseResponse<String>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Budget created successfully!", Toast.LENGTH_SHORT).show();
-                    fetchBudgets(); // Refresh the list
-                } else {
-                    Toast.makeText(getContext(), "Failed to create budget", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<BaseResponse<String>> call, Throwable t) {
-                Toast.makeText(getContext(), "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void showMonthPickerDialog() {
-        final Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-
-        DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
-                (view, year1, monthOfYear, dayOfMonth) -> {
-                    selectedMonth = year1 + "-" + String.format(Locale.getDefault(), "%02d", monthOfYear + 1) + "-01";
-                }, year, month, 1);
-        datePickerDialog.show();
-    }
-
-
-    private void setupFilters() {
-        // Category Type Filter
-        List<String> categoryTypes = new ArrayList<>();
-        categoryTypes.add("Expense");
-        categoryTypes.add("Income");
-        ArrayAdapter<String> categoryTypeAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, categoryTypes);
-        actvCategoryType.setAdapter(categoryTypeAdapter);
-        actvCategoryType.setText(categoryTypes.get(0), false); // Default to Expense
-
-        actvCategoryType.setOnItemClickListener((parent, view, position, id) -> {
-            fetchCategories(); // Reload categories when type changes
-        });
-
-        // Category Filter
-        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
-        actvCategory.setAdapter(categoryAdapter);
-    }
-
-    private void fetchCategories() {
-        String userId = sharedPreferences.getString("userId", "");
-        GetPagedCategoriesRequest request = new GetPagedCategoriesRequest(userId);
-
-        String categoryTypeStr = actvCategoryType.getText().toString();
-        if (categoryTypeStr.equals("Expense")) {
-            request.setCategoryType(0);
-        } else if (categoryTypeStr.equals("Income")) {
-            request.setCategoryType(1);
-        }
-
-        CategoryRepository.getCategoryService(getContext()).getCategories(request).enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
-            @Override
-            public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    categoryList.clear();
-                    categoryList.addAll(response.body().getPayload());
-
-                    List<String> categoryNames = new ArrayList<>();
-                    categoryNames.add("All Categories");
-                    for (GetCategoryResponse category : categoryList) {
-                        categoryNames.add(category.getName());
-                    }
-
-                    ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, categoryNames);
-                    actvCategory.setAdapter(categoryAdapter);
-                    if (!categoryNames.isEmpty()) {
-                        actvCategory.setText(categoryNames.get(0), false);
-                    }
-                } else {
-                    Toast.makeText(getContext(), "Failed to fetch categories", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
-                Toast.makeText(getContext(), "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
-    private void fetchBudgets() {
-        GetPagedBudgetsRequest request = new GetPagedBudgetsRequest();
-        String userId = sharedPreferences.getString("userId", "");
-        request.setUserId(userId);
-
-        // Populate request from filter views
-        String categoryName = actvCategory.getText().toString();
-        if (!categoryName.isEmpty() && !categoryName.equals("All Categories")) {
-            for (GetCategoryResponse category : categoryList) {
-                if (category.getName().equals(categoryName)) {
-                    request.setCategoryId(category.getId());
-                    break;
-                }
-            }
-        }
-
-        request.setCategoryType(actvCategoryType.getText().toString());
-
-        try {
-            if (!etMinAmount.getText().toString().isEmpty())
-                request.setStartRangeAmount(Double.parseDouble(etMinAmount.getText().toString()));
-        } catch (NumberFormatException e) {
-            request.setStartRangeAmount(null);
-        }
-        try {
-            if (!etMaxAmount.getText().toString().isEmpty())
-                request.setEndRangeAmount(Double.parseDouble(etMaxAmount.getText().toString()));
-        } catch (NumberFormatException e) {
-            request.setEndRangeAmount(null);
-        }
-
-        BudgetRepository.getBudgetService(getContext()).getBudgets(request).enqueue(new Callback<PagedResponse<GetBudgetResponse>>() {
-            @Override
-            public void onResponse(Call<PagedResponse<GetBudgetResponse>> call, Response<PagedResponse<GetBudgetResponse>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getPayload() != null) {
-                    if (response.body().getPayload().isEmpty()) {
-                        layoutEmptyState.setVisibility(View.VISIBLE);
-                        recyclerCategories.setVisibility(View.GONE);
-                    } else {
-                        layoutEmptyState.setVisibility(View.GONE);
-                        recyclerCategories.setVisibility(View.VISIBLE);
-                        adapter.updateData(response.body().getPayload());
-                    }
-                } else {
-                    layoutEmptyState.setVisibility(View.VISIBLE);
-                    recyclerCategories.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PagedResponse<GetBudgetResponse>> call, Throwable t) {
-                layoutEmptyState.setVisibility(View.VISIBLE);
-                recyclerCategories.setVisibility(View.GONE);
-            }
-        });
     }
 }
