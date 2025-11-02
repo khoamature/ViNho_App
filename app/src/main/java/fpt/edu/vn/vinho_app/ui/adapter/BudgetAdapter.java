@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Locale;
 
 import fpt.edu.vn.vinho_app.R;
 // Import lớp DTO mới
@@ -57,7 +58,7 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
     // Lớp ViewHolder
     public static class BudgetViewHolder extends RecyclerView.ViewHolder {
         // Khai báo các view trong item_budget.xml (tên có thể khác)
-        TextView tvCategoryName, tvSpentAmount, tvBudgetedAmount, tvRemainingAmount;
+        TextView tvCategoryName, tvSpentAmount, tvBudgetedAmount, tvRemainingAmount, tvUsedPercentage;
         ProgressBar progressBar;
 
         public BudgetViewHolder(@NonNull View itemView) {
@@ -68,6 +69,7 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             tvBudgetedAmount = itemView.findViewById(R.id.tvLimitAmount);
             tvRemainingAmount = itemView.findViewById(R.id.tvRemainingAmount);
             progressBar = itemView.findViewById(R.id.progressBar);
+            tvUsedPercentage = itemView.findViewById(R.id.tvUsedPercentage);
         }
 
         // Phương thức bind dữ liệu
@@ -85,6 +87,11 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             } else {
                 progressBar.setProgress(0);
             }
+            double progressValue = 0;
+            if (budget.getBudgetedAmount() > 0) {
+                progressValue = (budget.getSpentAmount() / budget.getBudgetedAmount()) * 100.0;
+            }
+            tvUsedPercentage.setText(String.format(Locale.US, "%d%%", (int) progressValue));
         }
 
         // Helper method để format tiền tệ

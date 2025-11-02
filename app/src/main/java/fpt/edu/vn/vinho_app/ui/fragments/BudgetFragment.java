@@ -22,6 +22,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
+
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,6 +58,9 @@ public class BudgetFragment extends Fragment {
     private List<GetCategoryResponse> categoryList = new ArrayList<>();
     private String selectedMonth;
 
+    private String selectedMonthValue; // Dùng để lưu giá trị yyyy-MM-dd
+    private String selectedCategoryType = "Expense"; // Mặc định là Expens
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -76,7 +81,6 @@ public class BudgetFragment extends Fragment {
         recyclerCategories.setAdapter(adapter);
 
         // Fetch data
-        fetchCategoriesForDialog(); // Renamed to avoid confusion
         fetchBudgetOverview();
 
         btnAddCategory.setOnClickListener(v -> showAddBudgetDialog());
@@ -155,42 +159,68 @@ public class BudgetFragment extends Fragment {
         });
     }
 
-    // Renamed this method
-    private void fetchCategoriesForDialog() {
+    private void fetchCategoriesForDialog(String type, AutoCompleteTextView actv, ArrayAdapter<String> adapter) {
         String userId = sharedPreferences.getString("userId", "");
-        GetPagedCategoriesRequest request = new GetPagedCategoriesRequest(userId);
-
-        CategoryRepository.getCategoryService(getContext()).getCategories(request).enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
+        // API của bạn dùng query parameter, không phải request body
+        CategoryRepository.getCategoryService(getContext()).getCategories(type, userId).enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
             @Override
             public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
-                // Your logic to handle a successful response goes here.
-                // You will now work with a 'response' object containing a 'PagedResponse<GetCategoryResponse>>'.
-                if (response.isSuccessful()) {
-                    PagedResponse<GetCategoryResponse> pagedResponse = response.body();
-                    if (pagedResponse != null) {
-                        // Access your data from the pagedResponse object
+                if (response.isSuccessful() && response.body() != null) {
+                    categoryList.clear();
+                    categoryList.addAll(response.body().getPayload());
+
+                    List<String> categoryNames = new ArrayList<>();
+                    for (GetCategoryResponse category : categoryList) {
+                        categoryNames.add(category.getName());
                     }
+                    // Cập nhật lại adapter và AutoCompleteTextView
+                    adapter.clear();
+                    adapter.addAll(categoryNames);
+                    adapter.notifyDataSetChanged();
+                    actv.setText("", false); // Xóa lựa chọn cũ
                 } else {
-                    // Handle API error (e.g., 404, 500)
+                    Toast.makeText(getContext(), "Failed to fetch categories", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
-                // Your logic to handle a network failure (e.g., no internet) goes here.
+                Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void showMonthPickerDialog() {
+    private void showMonthPickerDialog(Button btnMonthPicker) {
         final Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
         int month = c.get(Calendar.MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(),
                 (view, year1, monthOfYear, dayOfMonth) -> {
-                    selectedMonth = year1 + "-" + String.format(Locale.getDefault(), "%02d", monthOfYear + 1) + "-01";
+                    // Định dạng để hiển thị (Tên tháng, năm)
+                    Calendar selectedCal = Calendar.getInstance();
+                    selectedCal.set(year1, monthOfYear, 1);
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMMM, yyyy", Locale.getDefault());
+                    String displayMonth = displayFormat.format(selectedCal.getTime());
+                    btnMonthPicker.setText(displayMonth);
+
+                    // Định dạng để gửi đi API (yyyy-MM-dd)
+                    selectedMonthValue = year1 + "-" + String.format(Locale.US, "%02d", monthOfYear + 1) + "-01";
                 }, year, month, 1);
+
+        // --- SỬA LỖI Ở ĐÂY ---
+        // Thêm một bước kiểm tra null để tránh crash
+        try {
+            View dayPicker = datePickerDialog.getDatePicker().findViewById(getResources().getIdentifier("day", "id", "android"));
+            if (dayPicker != null) {
+                dayPicker.setVisibility(View.GONE);
+            }
+        } catch (Exception e) {
+            // Ghi lại log lỗi nếu cần, nhưng không làm crash app
+            e.printStackTrace();
+        }
+        // --- KẾT THÚC PHẦN SỬA LỖI ---
+
         datePickerDialog.show();
     }
 
@@ -200,24 +230,47 @@ public class BudgetFragment extends Fragment {
         View dialogView = inflater.inflate(R.layout.dialog_add_budget, null);
         builder.setView(dialogView);
 
+        // Ánh xạ các view trong dialog
+        MaterialButtonToggleGroup toggleGroup = dialogView.findViewById(R.id.toggleGroupType);
         AutoCompleteTextView actvDialogCategory = dialogView.findViewById(R.id.actvCategory);
         EditText etDialogLimitAmount = dialogView.findViewById(R.id.etLimitAmount);
         Button btnDialogMonthPicker = dialogView.findViewById(R.id.btnMonthPicker);
 
-        // Populate category dropdown
+        // -- LOGIC MỚI --
+
+        // 1. Thiết lập adapter cho Category (ban đầu rỗng)
         List<String> categoryNames = new ArrayList<>();
-        for (GetCategoryResponse category : categoryList) {
-            categoryNames.add(category.getName());
-        }
         ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, categoryNames);
         actvDialogCategory.setAdapter(categoryAdapter);
 
-        btnDialogMonthPicker.setOnClickListener(v -> showMonthPickerDialog());
+        // 2. Mặc định chọn Expense và fetch category cho nó
+        toggleGroup.check(R.id.btnExpense);
+        selectedCategoryType = "Expense";
+        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter);
+
+        // 3. Thêm Listener cho nhóm nút Type
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                if (checkedId == R.id.btnExpense) {
+                    selectedCategoryType = "Expense";
+                } else if (checkedId == R.id.btnIncome) {
+                    selectedCategoryType = "Income";
+                } else if (checkedId == R.id.btnNeutral) {
+                    selectedCategoryType = "Neutral";
+                }
+                // Fetch lại category mỗi khi đổi type
+                fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter);
+            }
+        });
+
+        // 4. Listener cho nút chọn tháng
+        btnDialogMonthPicker.setOnClickListener(v -> showMonthPickerDialog(btnDialogMonthPicker));
 
         builder.setTitle("Add Budget")
                 .setPositiveButton("Add", (dialog, which) -> {
                     String categoryName = actvDialogCategory.getText().toString();
                     String categoryId = null;
+                    // Tìm ID của category được chọn
                     for (GetCategoryResponse category : categoryList) {
                         if (category.getName().equals(categoryName)) {
                             categoryId = category.getId();
@@ -225,17 +278,27 @@ public class BudgetFragment extends Fragment {
                         }
                     }
 
-                    if (categoryId == null) {
+                    // Lấy số tiền
+                    String limitAmountStr = etDialogLimitAmount.getText().toString();
+
+                    // --- Kiểm tra dữ liệu đầu vào ---
+                    if (categoryId == null || categoryId.isEmpty()) {
                         Toast.makeText(getContext(), "Please select a category", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    if (selectedMonth == null || selectedMonth.isEmpty()) {
+                    if (limitAmountStr.isEmpty()) {
+                        Toast.makeText(getContext(), "Please enter a limit amount", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (selectedMonthValue == null || selectedMonthValue.isEmpty()) {
                         Toast.makeText(getContext(), "Please select a month", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    double limitAmount = Double.parseDouble(etDialogLimitAmount.getText().toString());
 
-                    createBudget(categoryId, limitAmount, selectedMonth);
+                    double limitAmount = Double.parseDouble(limitAmountStr);
+
+                    // Gọi hàm tạo budget
+                    createBudget(categoryId, limitAmount, selectedMonthValue);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 

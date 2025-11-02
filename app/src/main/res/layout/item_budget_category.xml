@@ -34,6 +34,20 @@
             app:layout_constraintStart_toEndOf="@+id/ivCategoryIcon"
             app:layout_constraintTop_toTopOf="@+id/ivCategoryIcon" />
 
+        <!-- THÊM MỚI: TextView để hiển thị phần trăm -->
+        <TextView
+            android:id="@+id/tvUsedPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:textColor="#D32F2F"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/tvLimitAmount"
+            app:layout_constraintTop_toTopOf="@+id/tvLimitAmount"
+            app:layout_constraintBottom_toBottomOf="@+id/tvLimitAmount"
+            android:text="50%"/>
+
         <TextView
             android:id="@+id/tvLimitAmount"
             android:layout_width="wrap_content"

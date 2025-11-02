@@ -1,10 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp">
 
+    <!-- BỘ CHỌN TYPE (GIỐNG ADD TRANSACTION) -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleGroupType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <Button
+            android:id="@+id/btnExpense"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Expense" />
+
+        <Button
+            android:id="@+id/btnIncome"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Income" />
+
+        <Button
+            android:id="@+id/btnNeutral"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Neutral" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <!-- Ô CHỌN CATEGORY -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
@@ -14,9 +51,11 @@
             android:id="@+id/actvCategory"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Category" />
+            android:hint="Category"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Ô NHẬP SỐ TIỀN -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,12 +69,19 @@
             android:inputType="numberDecimal" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- NÚT CHỌN THÁNG -->
     <Button
         android:id="@+id/btnMonthPicker"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Select Month" />
+        android:background="@drawable/custom_dialog_button_background"
+        android:padding="16dp"
+        android:text="Select Month"
+        android:textAllCaps="false"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:gravity="center"
+        app:backgroundTint="@null" />
 
 </LinearLayout>
