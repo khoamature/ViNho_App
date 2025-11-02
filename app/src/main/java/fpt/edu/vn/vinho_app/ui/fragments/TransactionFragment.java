@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,7 +30,7 @@ import java.util.Locale;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.ui.adapter.TransactionAdapter;
-import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoryRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoriesRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.GetPagedTransactionsRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.category.GetCategoryResponse;
@@ -104,8 +103,8 @@ public class TransactionFragment extends Fragment {
     private void setupCategoryTypeSpinner() {
         List<String> categoryTypes = new ArrayList<>();
         categoryTypes.add("All Types");
-        categoryTypes.add("Income");
         categoryTypes.add("Expense");
+        categoryTypes.add("Income");
         categoryTypes.add("Neutral");
 
         ArrayAdapter<String> categoryTypeAdapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item_with_hint, categoryTypes);
@@ -171,7 +170,7 @@ public class TransactionFragment extends Fragment {
 
     private void fetchCategories() {
         String userId = sharedPreferences.getString("userId", "");
-        GetPagedCategoryRequest request = new GetPagedCategoryRequest(userId);
+        GetPagedCategoriesRequest request = new GetPagedCategoriesRequest(userId);
 
         int selectedCategoryTypePos = spinnerCategoryType.getSelectedItemPosition();
         if (selectedCategoryTypePos > 0) {
@@ -215,6 +214,11 @@ public class TransactionFragment extends Fragment {
 
         request.setDescription(editTextDescription.getText().toString());
 
+        int selectedCategoryTypePos = spinnerCategoryType.getSelectedItemPosition();
+        if (selectedCategoryTypePos > 0) {
+            request.setCategoryType(selectedCategoryTypePos - 1);
+        }
+
         int selectedCategoryPos = spinnerCategory.getSelectedItemPosition();
         if (selectedCategoryPos > 0) {
             request.setCategoryId(categoryList.get(selectedCategoryPos - 1).getId());
@@ -223,28 +227,19 @@ public class TransactionFragment extends Fragment {
         try {
             request.setStartRangeAmount(Double.parseDouble(editTextStartAmount.getText().toString()));
         } catch (NumberFormatException e) {
-            // Ignore
+            request.setStartRangeAmount(null);
         }
-
         try {
             request.setEndRangeAmount(Double.parseDouble(editTextEndAmount.getText().toString()));
         } catch (NumberFormatException e) {
-            // Ignore
+            request.setEndRangeAmount(null);
         }
 
-        try {
-            request.setFromDate(String.valueOf(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(editTextFromDate.getText().toString())));
-        } catch (ParseException e) {
-            // Ignore
-        }
+        request.setFromDate(editTextFromDate.getText().toString());
+        request.setToDate(editTextToDate.getText().toString());
 
-        try {
-            request.setToDate(String.valueOf(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(editTextToDate.getText().toString())));
-        } catch (ParseException e) {
-            // Ignore
-        }
-
-        TransactionRepository.getTransactionService(getContext()).getTransactions(request).enqueue(new Callback<PagedResponse<GetTransactionResponse>>() {
+        Call<PagedResponse<GetTransactionResponse>> call = TransactionRepository.getTransactionService(getContext()).getTransactions(request);
+        call.enqueue(new Callback<PagedResponse<GetTransactionResponse>>() {
             @Override
             public void onResponse(Call<PagedResponse<GetTransactionResponse>> call, Response<PagedResponse<GetTransactionResponse>> response) {
                 swipeRefreshLayout.setRefreshing(false);

@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
     app:cardBackgroundColor="@color/white"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -16,11 +14,9 @@
         android:padding="16dp">
 
         <ImageView
-            android:id="@+id/iconCheck"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_check_circle"
-            app:tint="#4CAF50"
+            android:id="@+id/ivCategoryIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -28,69 +24,55 @@
             android:id="@+id/tvCategoryName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="Food"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:layout_marginStart="16dp"
+            android:text="Food &amp; Beverage"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/btnEdit"
-            app:layout_constraintStart_toEndOf="@+id/iconCheck"
-            app:layout_constraintTop_toTopOf="@+id/iconCheck"
-            app:layout_constraintBottom_toBottomOf="@+id/iconCheck" />
+            app:layout_constraintEnd_toStartOf="@+id/tvLimitAmount"
+            app:layout_constraintStart_toEndOf="@+id/ivCategoryIcon"
+            app:layout_constraintTop_toTopOf="@+id/ivCategoryIcon" />
 
         <TextView
-            android:id="@+id/btnEdit"
+            android:id="@+id/tvLimitAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edit"
-            android:textColor="?attr/colorPrimary"
+            android:text="500.000đ"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvCategoryName"
-            app:layout_constraintBottom_toBottomOf="@+id/tvCategoryName"/>
-
-        <TextView
-            android:id="@+id/tvCategoryAmount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="105.000đ of 200.000đ"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            app:layout_constraintStart_toStartOf="@+id/iconCheck"
-            app:layout_constraintTop_toBottomOf="@+id/tvCategoryName" />
+            app:layout_constraintTop_toTopOf="@+id/tvCategoryName" />
 
         <ProgressBar
             android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="0dp"
-            android:layout_height="8dp"
-            android:layout_marginTop="12dp"
-            android:max="100"
-            android:progress="53"
-            android:progressDrawable="@drawable/custom_progress_bar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvCategoryAmount" />
-
-        <TextView
-            android:id="@+id/tvRemaining"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="95.000đ remaining"
-            android:textColor="#4CAF50"
-            android:textStyle="bold"
+            android:max="100"
+            android:progress="50"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tvCategoryName"
+            app:layout_constraintTop_toBottomOf="@+id/tvCategoryName" />
+
+        <TextView
+            android:id="@+id/tvSpentAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="250.000đ"
+            android:textColor="#D32F2F"
             android:textAppearance="?attr/textAppearanceBodySmall"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/progressBar"
             app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
         <TextView
-            android:id="@+id/tvPercentage"
+            android:id="@+id/tvRemainingAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="53%"
+            android:text="Còn lại 250.000đ"
             android:textAppearance="?attr/textAppearanceBodySmall"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvRemaining" />
+            app:layout_constraintTop_toBottomOf="@+id/progressBar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </com.google.android.material.card.MaterialCardView>

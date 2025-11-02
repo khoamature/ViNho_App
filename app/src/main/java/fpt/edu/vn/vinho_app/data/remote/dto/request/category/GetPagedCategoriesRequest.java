@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import fpt.edu.vn.vinho_app.data.remote.dto.request.base.PagedAndSortedRequest;
 
-public class GetPagedCategoryRequest extends PagedAndSortedRequest {
+public class GetPagedCategoriesRequest extends PagedAndSortedRequest {
     @SerializedName("userId")
     private String userId;
 
@@ -17,7 +17,7 @@ public class GetPagedCategoryRequest extends PagedAndSortedRequest {
     @SerializedName("type")
     private Integer categoryType;
 
-    public GetPagedCategoryRequest(String userId) {
+    public GetPagedCategoriesRequest(String userId) {
         this.userId = userId;
     }
 

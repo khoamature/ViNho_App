@@ -1,28 +1,29 @@
-package fpt.edu.vn.vinho_app.data.remote.dto.response.budget;
+package fpt.edu.vn.vinho_app.data.remote.dto.request.budget;
 
 import com.google.gson.annotations.SerializedName;
 
-public class GetBudgetResponse {
-    @SerializedName("id")
-    private String id;
+public class CreateBudgetRequest {
+
     @SerializedName("userId")
     private String userId;
+
     @SerializedName("categoryId")
     private String categoryId;
+
     @SerializedName("limitAmount")
     private double limitAmount;
+
     @SerializedName("month")
     private String month;
-    @SerializedName("deletedAt")
-    private String deletedAt;
-    @SerializedName("createdAt")
-    private String createdAt;
-    @SerializedName("updatedAt")
-    private String updatedAt;
+
+    public CreateBudgetRequest(String userId, String categoryId, double limitAmount, String month) {
+        this.userId = userId;
+        this.categoryId = categoryId;
+        this.limitAmount = limitAmount;
+        this.month = month;
+    }
 
     // Getters and Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
     public String getCategoryId() { return categoryId; }
@@ -31,10 +32,4 @@ public class GetBudgetResponse {
     public void setLimitAmount(double limitAmount) { this.limitAmount = limitAmount; }
     public String getMonth() { return month; }
     public void setMonth(String month) { this.month = month; }
-    public String getDeletedAt() { return deletedAt; }
-    public void setDeletedAt(String deletedAt) { this.deletedAt = deletedAt; }
-    public String getCreatedAt() { return createdAt; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-    public String getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 }
