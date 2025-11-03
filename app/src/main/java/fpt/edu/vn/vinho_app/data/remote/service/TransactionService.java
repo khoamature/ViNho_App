@@ -11,6 +11,7 @@ import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionApiR
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionSummaryResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -28,7 +29,10 @@ public interface TransactionService {
     Call<GetTransactionResponse> createTransaction(@Body CreateTransactionRequest request);
 
     @PUT("transactions/{id}")
-    Call<GetTransactionResponse> updateTransaction(@Path("id") int id, @Body UpdateTransactionRequest request);
+    Call<Void> updateTransaction(@Path("id") String transactionId, @Body UpdateTransactionRequest request);
+
+    @DELETE("transactions/{id}")
+    Call<Void> deleteTransaction(@Path("id") String transactionId);
 
     @GET("transactions")
     Call<TransactionApiResponse> getTransactions(

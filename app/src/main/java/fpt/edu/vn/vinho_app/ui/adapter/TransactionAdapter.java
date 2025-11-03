@@ -3,10 +3,11 @@ package fpt.edu.vn.vinho_app.ui.adapter;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.view.ViewGroup;import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DecimalFormat;
@@ -27,13 +28,18 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private static final int TYPE_TRANSACTION = 1;
 
     private List<DisplayableItem> items;
+    private final OnTransactionActionsListener listener;
 
-    public TransactionAdapter(List<DisplayableItem> items) {
-        this.items = items;
+    // Interface để giao tiếp từ Adapter về Fragment
+    public interface OnTransactionActionsListener {
+        void onEditTransaction(TransactionItem item);
+        void onDeleteTransaction(TransactionItem item);
     }
 
-    // Phương thức để Fragment cập nhật filter type cho Adapter
-
+    public TransactionAdapter(List<DisplayableItem> items, OnTransactionActionsListener listener) {
+        this.items = items;
+        this.listener = listener;
+    }
 
     public void updateData(List<DisplayableItem> newItems) {
         this.items.clear();
@@ -64,19 +70,17 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        // Lấy ra kiểu của view tại vị trí này
         int viewType = getItemViewType(position);
 
         if (viewType == TYPE_HEADER) {
-            // Nếu là header, ép kiểu và bind dữ liệu cho HeaderViewHolder
             HeaderViewHolder headerHolder = (HeaderViewHolder) holder;
             DateHeaderItem headerItem = (DateHeaderItem) items.get(position);
             headerHolder.bind(headerItem);
         } else if (viewType == TYPE_TRANSACTION) {
-            // Nếu là transaction, ép kiểu và bind dữ liệu cho TransactionViewHolder
             TransactionViewHolder transactionHolder = (TransactionViewHolder) holder;
             TransactionItem transactionItem = (TransactionItem) items.get(position);
-            transactionHolder.bind(transactionItem);
+            // Truyền cả transaction và listener vào để xử lý sự kiện
+            transactionHolder.bind(transactionItem, listener);
         }
     }
 
@@ -99,9 +103,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    // ViewHolder cho Giao dịch
+    // ViewHolder cho một Giao dịch
     static class TransactionViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivCategoryIcon;
+        ImageView ivCategoryIcon, btnMenu;
         TextView tvCategoryName, tvDescription, tvAmount, tvTransactionTime;
 
         public TransactionViewHolder(@NonNull View itemView) {
@@ -111,22 +115,25 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvAmount = itemView.findViewById(R.id.tvAmount);
             tvTransactionTime = itemView.findViewById(R.id.tvTransactionTime);
+            btnMenu = itemView.findViewById(R.id.btnMenu); // Ánh xạ nút menu
         }
 
-        public void bind(TransactionItem transaction) {
+        public void bind(final TransactionItem transaction, final OnTransactionActionsListener listener) {
+            // Bind dữ liệu cơ bản
             tvCategoryName.setText(transaction.getCategoryName());
             tvDescription.setText(transaction.getDescription());
-            ivCategoryIcon.setImageResource(R.drawable.ic_money);
+            ivCategoryIcon.setImageResource(R.drawable.ic_money); // Set icon cứng
 
+            // Hiển thị số tiền dựa trên categoryType
             if ("Income".equalsIgnoreCase(transaction.getCategoryType())) {
                 tvAmount.setText(String.format(Locale.US, "+%s", formatCurrency(transaction.getAmount())));
                 tvAmount.setTextColor(Color.parseColor("#2ECC71"));
-            } else { // Mặc định là Expense
+            } else { // Expense hoặc các loại khác
                 tvAmount.setText(String.format(Locale.US, "-%s", formatCurrency(transaction.getAmount())));
                 tvAmount.setTextColor(Color.parseColor("#E74C3C"));
             }
 
-            // Xử lý thời gian (không đổi)
+            // Hiển thị thời gian
             try {
                 SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
                 SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
@@ -137,12 +144,30 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             } catch (ParseException e) {
                 tvTransactionTime.setText("");
             }
-        }
-    }
 
-    private static String formatCurrency(double amount) {
-        // Lấy giá trị tuyệt đối để format, dấu +/- sẽ được thêm ở ngoài
-        DecimalFormat formatter = new DecimalFormat("#,###.##đ");
-        return formatter.format(Math.abs(amount));
+            // Thêm sự kiện click cho nút menu (3 chấm)
+            btnMenu.setOnClickListener(view -> {
+                PopupMenu popup = new PopupMenu(view.getContext(), btnMenu);
+                popup.getMenuInflater().inflate(R.menu.budget_item_menu, popup.getMenu()); // Tái sử dụng menu cũ
+
+                popup.setOnMenuItemClickListener(item -> {
+                    int itemId = item.getItemId();
+                    if (itemId == R.id.menu_edit) {
+                        listener.onEditTransaction(transaction);
+                        return true;
+                    } else if (itemId == R.id.menu_delete) {
+                        listener.onDeleteTransaction(transaction);
+                        return true;
+                    }
+                    return false;
+                });
+                popup.show();
+            });
+        }
+
+        private String formatCurrency(double amount) {
+            DecimalFormat formatter = new DecimalFormat("#,###.##đ");
+            return formatter.format(Math.abs(amount));
+        }
     }
 }

@@ -1,5 +1,8 @@
 package fpt.edu.vn.vinho_app.ui.fragments;
 
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -27,19 +30,24 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.button.MaterialButtonToggleGroup;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import fpt.edu.vn.vinho_app.R;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.UpdateTransactionRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.category.GetCategoryResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionApiResponse;
@@ -55,7 +63,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class TransactionFragment extends Fragment implements View.OnClickListener {
+public class TransactionFragment extends Fragment implements View.OnClickListener, TransactionAdapter.OnTransactionActionsListener {
     private static final String TAG = "TransactionFragment";
 
     // Views
@@ -116,7 +124,8 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private void setupRecyclerView() {
         recyclerViewTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
         summaryCardAdapter = new SummaryCardAdapter();
-        transactionListAdapter = new TransactionAdapter(new ArrayList<>());
+        // Truyền "this" vào constructor để đăng ký listener
+        transactionListAdapter = new TransactionAdapter(new ArrayList<>(), this);
         concatAdapter = new ConcatAdapter(summaryCardAdapter, transactionListAdapter);
         recyclerViewTransactions.setAdapter(concatAdapter);
     }
@@ -131,14 +140,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (searchRunnable != null) {
-                    searchHandler.removeCallbacks(searchRunnable);
-                }
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
             }
-
             @Override
             public void afterTextChanged(Editable s) {
                 searchRunnable = () -> fetchTransactions();
@@ -154,15 +159,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
             if (id == R.id.btnAll) currentFilterType = null;
             else if (id == R.id.btnIncome) currentFilterType = "Income";
             else if (id == R.id.btnExpense) currentFilterType = "Expense";
-
             updateButtonStyles((Button) v);
             fetchCategoriesAndThenTransactions(currentFilterType);
         } else if (id == R.id.btnFilter) {
-            if (layoutCategoryFilter.getVisibility() == View.GONE) {
-                layoutCategoryFilter.setVisibility(View.VISIBLE);
-            } else {
-                layoutCategoryFilter.setVisibility(View.GONE);
-            }
+            layoutCategoryFilter.setVisibility(layoutCategoryFilter.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -210,7 +210,6 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                             fetchTransactions();
                         }
                     }
-
                     @Override
                     public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
                         Log.e(TAG, "Failure fetching categories", t);
@@ -239,20 +238,12 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private void fetchTransactions() {
         swipeRefreshLayout.setRefreshing(true);
         String userId = sharedPreferences.getString("userId", "");
-        if (userId.isEmpty()) {
-            swipeRefreshLayout.setRefreshing(false);
-            return;
-        }
+        if (userId.isEmpty()) { swipeRefreshLayout.setRefreshing(false); return; }
 
-        // SỬA LỖI: Chuyển chuỗi rỗng thành null để Retrofit bỏ qua tham số
         String searchQuery = etSearch.getText().toString().trim();
-        if (searchQuery.isEmpty()) {
-            searchQuery = null;
-        }
+        if (searchQuery.isEmpty()) searchQuery = null;
 
-        Log.d(TAG, "Step 3: Fetching transactions with Type: " + currentFilterType +
-                ", CategoryID: " + selectedCategoryId +
-                ", SearchQuery: " + searchQuery);
+        Log.d(TAG, "Step 3: Fetching transactions with Type: " + currentFilterType + ", CategoryID: " + selectedCategoryId + ", SearchQuery: " + searchQuery);
 
         TransactionRepository.getTransactionService(getContext())
                 .getTransactions(userId, currentFilterType, selectedCategoryId, searchQuery)
@@ -262,31 +253,23 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                         swipeRefreshLayout.setRefreshing(false);
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<TransactionSummaryResponse> payload = response.body().getPayload();
-
                             if (payload != null && !payload.isEmpty() && payload.get(0).getTransactions() != null && !payload.get(0).getTransactions().isEmpty()) {
-                                // Data found
                                 recyclerViewTransactions.setVisibility(View.VISIBLE);
                                 layoutEmptyState.setVisibility(View.GONE);
-
                                 TransactionSummaryResponse summary = payload.get(0);
                                 summaryCardAdapter.setSummary(summary);
-
-                                List<TransactionItem> transactions = summary.getTransactions();
-                                List<DisplayableItem> displayableItems = processAndGroupTransactions(transactions);
+                                List<DisplayableItem> displayableItems = processAndGroupTransactions(summary.getTransactions());
                                 transactionListAdapter.updateData(displayableItems);
                                 Log.d(TAG, "Step 4: Success! Adapter updated with " + displayableItems.size() + " items.");
                             } else {
-                                // No data found
                                 Log.d(TAG, "Step 4: API Success but no transactions found.");
                                 handleEmptyOrError();
                             }
                         } else {
-                            // API Error
                             Log.e(TAG, "Step 4: API Error. Code: " + response.code());
                             handleEmptyOrError();
                         }
                     }
-
                     @Override
                     public void onFailure(Call<TransactionApiResponse> call, Throwable t) {
                         swipeRefreshLayout.setRefreshing(false);
@@ -304,29 +287,21 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     }
 
     private List<DisplayableItem> processAndGroupTransactions(List<TransactionItem> transactions) {
-        if (transactions == null || transactions.isEmpty()) {
-            return new ArrayList<>();
-        }
+        if (transactions == null || transactions.isEmpty()) return new ArrayList<>();
         Collections.sort(transactions, (t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()));
         Map<String, List<TransactionItem>> groupedMap = new LinkedHashMap<>();
         SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
         SimpleDateFormat groupKeyFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
         for (TransactionItem transaction : transactions) {
             try {
                 Date date = apiFormat.parse(transaction.getTransactionDate());
                 if (date != null) {
-                    String dayKey = groupKeyFormat.format(date);
-                    groupedMap.computeIfAbsent(dayKey, k -> new ArrayList<>()).add(transaction);
+                    groupedMap.computeIfAbsent(groupKeyFormat.format(date), k -> new ArrayList<>()).add(transaction);
                 }
-            } catch (ParseException e) {
-                Log.e(TAG, "Error parsing transaction date", e);
-            }
+            } catch (ParseException e) { Log.e(TAG, "Error parsing transaction date", e); }
         }
-
         List<DisplayableItem> displayableItems = new ArrayList<>();
         SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
-
         for (Map.Entry<String, List<TransactionItem>> entry : groupedMap.entrySet()) {
             try {
                 Date date = groupKeyFormat.parse(entry.getKey());
@@ -334,9 +309,7 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                     displayableItems.add(new DateHeaderItem(displayDateFormat.format(date), 0));
                     displayableItems.addAll(entry.getValue());
                 }
-            } catch (ParseException e) {
-                Log.e(TAG, "Error parsing group key date", e);
-            }
+            } catch (ParseException e) { Log.e(TAG, "Error parsing group key date", e); }
         }
         return displayableItems;
     }
@@ -344,5 +317,146 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private String formatCurrency(double amount) {
         DecimalFormat formatter = new DecimalFormat("#,###đ");
         return formatter.format(amount);
+    }
+
+    // --- LOGIC SỬA/XÓA ---
+    @Override
+    public void onEditTransaction(TransactionItem item) {
+        showEditTransactionDialog(item);
+    }
+    @Override
+    public void onDeleteTransaction(TransactionItem item) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Delete Transaction")
+                .setMessage("Are you sure you want to delete this transaction?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteTransaction(item.getId()))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+    private void deleteTransaction(String transactionId) {
+        TransactionRepository.getTransactionService(getContext()).deleteTransaction(transactionId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Transaction deleted successfully", Toast.LENGTH_SHORT).show();
+                    fetchTransactions();
+                } else { Toast.makeText(getContext(), "Failed to delete transaction", Toast.LENGTH_SHORT).show(); }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) { Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show(); }
+        });
+    }
+    private void updateTransaction(String transactionId, UpdateTransactionRequest request) {
+        TransactionRepository.getTransactionService(getContext()).updateTransaction(transactionId, request).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Transaction updated successfully", Toast.LENGTH_SHORT).show();
+                    fetchTransactions();
+                } else { Toast.makeText(getContext(), "Failed to update transaction", Toast.LENGTH_SHORT).show(); }
+            }
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) { Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show(); }
+        });
+    }
+
+    private void showEditTransactionDialog(TransactionItem item) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_transaction, null);
+        builder.setView(dialogView).setTitle("Edit Transaction");
+
+        MaterialButtonToggleGroup toggleGroup = dialogView.findViewById(R.id.toggleGroupType);
+        AutoCompleteTextView autoCompleteCategory = dialogView.findViewById(R.id.autoCompleteCategory);
+        EditText editAmount = dialogView.findViewById(R.id.editAmount);
+        EditText editDescription = dialogView.findViewById(R.id.editDescription);
+        Button btnDateTimePicker = dialogView.findViewById(R.id.btnDateTimePicker);
+
+        final Calendar calendar = Calendar.getInstance();
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            calendar.setTime(sdf.parse(item.getTransactionDate()));
+            btnDateTimePicker.setText(new SimpleDateFormat("EEE, dd/MM/yyyy HH:mm", Locale.getDefault()).format(calendar.getTime()));
+        } catch (Exception e) { e.printStackTrace(); }
+
+        editAmount.setText(String.valueOf(item.getAmount()));
+        editDescription.setText(item.getDescription());
+
+        btnDateTimePicker.setOnClickListener(v -> {
+            new DatePickerDialog(getContext(), (dateView, year, month, day) -> {
+                calendar.set(year, month, day);
+                new TimePickerDialog(getContext(), (timeView, hour, minute) -> {
+                    calendar.set(Calendar.HOUR_OF_DAY, hour);
+                    calendar.set(Calendar.MINUTE, minute);
+                    btnDateTimePicker.setText(new SimpleDateFormat("EEE, dd/MM/yyyy HH:mm", Locale.getDefault()).format(calendar.getTime()));
+                }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show();
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
+        autoCompleteCategory.setAdapter(categoryAdapter);
+        autoCompleteCategory.setText(item.getCategoryName());
+
+        final List<GetCategoryResponse> dialogCategoryList = new ArrayList<>();
+        final String[] selectedDialogCategoryId = {item.getCategoryId()};
+
+        // Logic fetch category cho dialog
+        Runnable fetchDialogCategories = () -> {
+            String type = toggleGroup.getCheckedButtonId() == R.id.btnIncome ? "Income" : "Expense";
+            CategoryRepository.getCategoryService(getContext()).getCategories(type, sharedPreferences.getString("userId", ""))
+                    .enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
+                        @Override
+                        public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                dialogCategoryList.clear();
+                                dialogCategoryList.addAll(response.body().getPayload());
+                                List<String> names = new ArrayList<>();
+                                for(GetCategoryResponse cat : dialogCategoryList) names.add(cat.getName());
+                                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, names);
+                                autoCompleteCategory.setAdapter(adapter);
+                            }
+                        }
+                        @Override public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {}
+                    });
+        };
+
+        if ("Income".equalsIgnoreCase(item.getCategoryType())) toggleGroup.check(R.id.btnIncome);
+        else toggleGroup.check(R.id.btnExpense);
+        fetchDialogCategories.run();
+
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                autoCompleteCategory.setText("");
+                selectedDialogCategoryId[0] = null;
+                fetchDialogCategories.run();
+            }
+        });
+
+        autoCompleteCategory.setOnItemClickListener((parent, view, position, id) -> {
+            String name = (String) parent.getItemAtPosition(position);
+            for(GetCategoryResponse cat : dialogCategoryList) {
+                if(cat.getName().equals(name)) {
+                    selectedDialogCategoryId[0] = cat.getId();
+                    break;
+                }
+            }
+        });
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            if (selectedDialogCategoryId[0] == null) {
+                Toast.makeText(getContext(), "Please select a category", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            double newAmount = Double.parseDouble(editAmount.getText().toString());
+            String newDescription = editDescription.getText().toString();
+            SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+            isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            String newDate = isoFormat.format(calendar.getTime());
+
+            UpdateTransactionRequest request = new UpdateTransactionRequest(selectedDialogCategoryId[0], newAmount, newDescription, newDate);
+            updateTransaction(item.getId(), request);
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.create().show();
     }
 }
