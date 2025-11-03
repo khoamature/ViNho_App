@@ -5,119 +5,125 @@
     android:id="@+id/swipeRefreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F4F6F9"
     tools:context=".ui.fragments.TransactionFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
-        <EditText
-            android:id="@+id/editTextDescription"
-            android:layout_width="0dp"
+        <!-- Header với màu Gradient (GIỮ NGUYÊN) -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="Description"
-            app:layout_constraintEnd_toStartOf="@+id/buttonFilter"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:background="@drawable/bg_transaction_header"
+            android:fitsSystemWindows="true">
 
-        <Spinner
-            android:id="@+id/spinnerCategoryType"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:layout_constraintTop_toBottomOf="@id/editTextDescription"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            <!-- ... (Toàn bộ nội dung bên trong AppBarLayout giữ nguyên) ... -->
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
-        <EditText
-            android:id="@+id/editTextSearchCategory"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="Search Category"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCategoryType"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-        <Spinner
-            android:id="@+id/spinnerCategory"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:layout_constraintTop_toBottomOf="@id/editTextSearchCategory"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+                    <!-- Search Bar -->
+                    <EditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_search_bar"
+                        android:drawableStart="@drawable/ic_3dot"
+                        android:drawablePadding="12dp"
+                        android:hint="Search transactions..."
+                        android:padding="12dp"
+                        android:textColorHint="@color/black"
+                        android:textColor="@color/black" />
 
-        <EditText
-            android:id="@+id/editTextStartAmount"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="Min Amount"
-            android:inputType="numberDecimal"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCategory"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/editTextEndAmount"/>
+                    <!-- Filter Buttons - THAY ĐỔI HOÀN TOÀN -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/editTextEndAmount"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="Max Amount"
-            android:inputType="numberDecimal"
-            app:layout_constraintTop_toBottomOf="@id/spinnerCategory"
-            app:layout_constraintStart_toEndOf="@id/editTextStartAmount"
-            app:layout_constraintEnd_toEndOf="parent"/>
+                        <Button
+                            android:id="@+id/btnFilter"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="Filters"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white"
+                            app:iconTint="@color/white"
+                            app:strokeColor="@color/white" />
 
-        <EditText
-            android:id="@+id/editTextFromDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="From Date (YYYY-MM-DD)"
-            app:layout_constraintTop_toBottomOf="@id/editTextStartAmount"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/editTextToDate"/>
+                        <!-- Sử dụng LinearLayout thay cho ToggleGroup -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/editTextToDate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:hint="To Date (YYYY-MM-DD)"
-            app:layout_constraintTop_toBottomOf="@id/editTextStartAmount"
-            app:layout_constraintStart_toEndOf="@id/editTextFromDate"
-            app:layout_constraintEnd_toEndOf="parent"/>
+                            <!-- Thay thế các nút trong ToggleGroup bằng Button riêng lẻ -->
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnAll"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_filter_button_selected"
+                                android:text="All"
+                                android:textAllCaps="false"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
 
-        <Button
-            android:id="@+id/buttonFilter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:text="Filter"
-            app:layout_constraintEnd_toStartOf="@+id/buttonClear"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/buttonClear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:text="Clear"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnExpense"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_filter_button_unselected"
+                                android:text="Expense"
+                                android:textAllCaps="false"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnIncome"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_filter_button_unselected"
+                                android:text="Income"
+                                android:textAllCaps="false"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewTransactions"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextFromDate" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="16dp"
+            android:paddingTop="56dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/item_transaction" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

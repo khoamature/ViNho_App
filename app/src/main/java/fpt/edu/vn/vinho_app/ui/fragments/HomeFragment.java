@@ -32,9 +32,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
-    private RecyclerView recyclerView;
-    private TransactionAdapter adapter;
-    private List<GetTransactionResponse> transactionList = new ArrayList<>();
     private SharedPreferences sharedPreferences;
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -43,63 +40,7 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-
-        initUI(view);
-        setupUI();
-
-        fetchTransactions();
-
         return view;
     }
 
-    private void initUI(View view) {
-        recyclerView = view.findViewById(R.id.recyclerViewTransactions);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-    }
-
-    private void setupUI() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new TransactionAdapter(transactionList);
-        recyclerView.setAdapter(adapter);
-        swipeRefreshLayout.setOnRefreshListener(this::fetchTransactions);
-    }
-
-    private void fetchTransactions() {
-        swipeRefreshLayout.setRefreshing(true);
-        String userId = sharedPreferences.getString("userId", "");
-        GetPagedTransactionsRequest request = new GetPagedTransactionsRequest(userId);
-
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-        request.setToDate(sdf.format(calendar.getTime()));
-
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        request.setFromDate(sdf.format(calendar.getTime()));
-
-        request.setSortBy("CreatedAt");
-        request.setSortDescending(true);
-
-
-        TransactionRepository.getTransactionService(getContext()).getTransactions(request).enqueue(new Callback<PagedResponse<GetTransactionResponse>>() {
-            @Override
-            public void onResponse(Call<PagedResponse<GetTransactionResponse>> call, Response<PagedResponse<GetTransactionResponse>> response) {
-                swipeRefreshLayout.setRefreshing(false);
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    transactionList.clear();
-                    transactionList.addAll(response.body().getPayload());
-                    adapter.notifyDataSetChanged();
-                } else {
-                    Toast.makeText(getContext(), "Failed to fetch transactions", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PagedResponse<GetTransactionResponse>> call, Throwable t) {
-                swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(), "An error occurred: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 }

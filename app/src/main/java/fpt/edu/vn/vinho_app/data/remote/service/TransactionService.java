@@ -1,16 +1,21 @@
 package fpt.edu.vn.vinho_app.data.remote.service;
 
+import java.util.List;
+
 import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.CreateTransactionRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.GetPagedTransactionsRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.transaction.UpdateTransactionRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.GetTransactionResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionApiResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionSummaryResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface TransactionService {
     @GET("transactions/{id}")
@@ -24,4 +29,9 @@ public interface TransactionService {
 
     @PUT("transactions/{id}")
     Call<GetTransactionResponse> updateTransaction(@Path("id") int id, @Body UpdateTransactionRequest request);
+
+    @GET("transactions")
+    Call<TransactionApiResponse> getTransactions(@Query("UserId") String userId,
+                                                 @Query("CategoryType") String categoryType
+    );
 }
