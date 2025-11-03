@@ -10,13 +10,10 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface CategoryService {
-    @POST("categories/search")
-    Call<PagedResponse<GetCategoryResponse>> getCategories(@Body GetPagedCategoriesRequest request);
 
-
-    @GET("/api/categories")
+    @GET("categories")
     Call<PagedResponse<GetCategoryResponse>> getCategories(
-            @Query("Type") String type,
+            @Query("Type") String type, // Tham số này có thể là "Expense", "Income", hoặc null
             @Query("UserId") String userId
     );
 }

@@ -4,12 +4,19 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log; // Import Log để debug
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,9 +40,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import fpt.edu.vn.vinho_app.R;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.category.GetCategoryResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionApiResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionItem;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionSummaryResponse;
+import fpt.edu.vn.vinho_app.data.repository.CategoryRepository;
 import fpt.edu.vn.vinho_app.data.repository.TransactionRepository;
 import fpt.edu.vn.vinho_app.ui.adapter.SummaryCardAdapter;
 import fpt.edu.vn.vinho_app.ui.adapter.TransactionAdapter;
@@ -46,18 +56,31 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class TransactionFragment extends Fragment implements View.OnClickListener {
-    private static final String TAG = "TransactionFragment"; // Thêm TAG để debug
+    private static final String TAG = "TransactionFragment";
 
+    // Views
     private SwipeRefreshLayout swipeRefreshLayout;
+    private LinearLayout layoutEmptyState;
     private EditText etSearch;
-    private Button btnAll, btnIncome, btnExpense;
+    private Button btnAll, btnIncome, btnExpense, btnFilter;
+    private LinearLayout layoutCategoryFilter;
+    private AutoCompleteTextView autoCompleteCategory;
     private RecyclerView recyclerViewTransactions;
+
+    // Adapters
     private TransactionAdapter transactionListAdapter;
     private SummaryCardAdapter summaryCardAdapter;
     private ConcatAdapter concatAdapter;
-    private SharedPreferences sharedPreferences;
 
+    // Data & State
+    private SharedPreferences sharedPreferences;
     private String currentFilterType = null;
+    private List<GetCategoryResponse> categoryList = new ArrayList<>();
+    private String selectedCategoryId = null;
+
+    // Debouncing for search
+    private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
 
     @Nullable
     @Override
@@ -65,23 +88,29 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         View view = inflater.inflate(R.layout.fragment_transaction, container, false);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
-        // Ánh xạ views
+        mapViews(view);
+        setupRecyclerView();
+        setupListeners();
+        setupCategoryFilterListener();
+
+        // Initial data load
+        updateButtonStyles(btnAll);
+        fetchCategoriesAndThenTransactions(null);
+
+        return view;
+    }
+
+    private void mapViews(View view) {
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         etSearch = view.findViewById(R.id.etSearch);
         btnAll = view.findViewById(R.id.btnAll);
         btnIncome = view.findViewById(R.id.btnIncome);
         btnExpense = view.findViewById(R.id.btnExpense);
         recyclerViewTransactions = view.findViewById(R.id.recyclerViewTransactions);
-
-        // Thiết lập RecyclerView
-        setupRecyclerView();
-        setupListeners();
-
-        // Tải dữ liệu lần đầu
-        updateButtonStyles(btnAll);
-        fetchTransactions();
-
-        return view;
+        layoutEmptyState = view.findViewById(R.id.layoutEmptyState);
+        btnFilter = view.findViewById(R.id.btnFilter);
+        layoutCategoryFilter = view.findViewById(R.id.layoutCategoryFilter);
+        autoCompleteCategory = view.findViewById(R.id.autoCompleteCategory);
     }
 
     private void setupRecyclerView() {
@@ -97,22 +126,44 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         btnAll.setOnClickListener(this);
         btnIncome.setOnClickListener(this);
         btnExpense.setOnClickListener(this);
+        btnFilter.setOnClickListener(this);
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (searchRunnable != null) {
+                    searchHandler.removeCallbacks(searchRunnable);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                searchRunnable = () -> fetchTransactions();
+                searchHandler.postDelayed(searchRunnable, 500); // 500ms delay
+            }
+        });
     }
 
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.btnAll) {
-            currentFilterType = null;
-            updateButtonStyles(btnAll);
-        } else if (id == R.id.btnIncome) {
-            currentFilterType = "Income";
-            updateButtonStyles(btnIncome);
-        } else if (id == R.id.btnExpense) {
-            currentFilterType = "Expense";
-            updateButtonStyles(btnExpense);
+        if (id == R.id.btnAll || id == R.id.btnIncome || id == R.id.btnExpense) {
+            if (id == R.id.btnAll) currentFilterType = null;
+            else if (id == R.id.btnIncome) currentFilterType = "Income";
+            else if (id == R.id.btnExpense) currentFilterType = "Expense";
+
+            updateButtonStyles((Button) v);
+            fetchCategoriesAndThenTransactions(currentFilterType);
+        } else if (id == R.id.btnFilter) {
+            if (layoutCategoryFilter.getVisibility() == View.GONE) {
+                layoutCategoryFilter.setVisibility(View.VISIBLE);
+            } else {
+                layoutCategoryFilter.setVisibility(View.GONE);
+            }
         }
-        fetchTransactions();
     }
 
     private void updateButtonStyles(Button selectedButton) {
@@ -125,58 +176,122 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         selectedButton.setBackgroundResource(R.drawable.bg_filter_button_selected);
     }
 
+    private void fetchCategoriesAndThenTransactions(String type) {
+        String userId = sharedPreferences.getString("userId", "");
+        if (userId.isEmpty()) return;
+
+        Log.d(TAG, "Step 1: Fetching categories for type: " + type);
+        handleEmptyOrError();
+
+        CategoryRepository.getCategoryService(getContext()).getCategories(type, userId)
+                .enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
+                    @Override
+                    public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            categoryList.clear();
+                            categoryList.addAll(response.body().getPayload());
+
+                            List<String> categoryNames = new ArrayList<>();
+                            categoryNames.add("All");
+                            for (GetCategoryResponse category : categoryList) {
+                                categoryNames.add(category.getName());
+                            }
+
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, categoryNames);
+                            autoCompleteCategory.setAdapter(adapter);
+
+                            autoCompleteCategory.setText("All", false);
+                            selectedCategoryId = null;
+
+                            Log.d(TAG, "Step 2: Categories fetched. Now fetching transactions...");
+                            fetchTransactions();
+                        } else {
+                            Log.e(TAG, "Failed to fetch categories. Code: " + response.code());
+                            fetchTransactions();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
+                        Log.e(TAG, "Failure fetching categories", t);
+                        fetchTransactions();
+                    }
+                });
+    }
+
+    private void setupCategoryFilterListener() {
+        autoCompleteCategory.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedName = (String) parent.getItemAtPosition(position);
+            if ("All".equals(selectedName)) {
+                selectedCategoryId = null;
+            } else {
+                for (GetCategoryResponse category : categoryList) {
+                    if (category.getName().equals(selectedName)) {
+                        selectedCategoryId = category.getId();
+                        break;
+                    }
+                }
+            }
+            fetchTransactions();
+        });
+    }
+
     private void fetchTransactions() {
         swipeRefreshLayout.setRefreshing(true);
         String userId = sharedPreferences.getString("userId", "");
-
         if (userId.isEmpty()) {
             swipeRefreshLayout.setRefreshing(false);
-            Toast.makeText(getContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // SỬA LỖI: Chuyển chuỗi rỗng thành null để Retrofit bỏ qua tham số
+        String searchQuery = etSearch.getText().toString().trim();
+        if (searchQuery.isEmpty()) {
+            searchQuery = null;
+        }
+
+        Log.d(TAG, "Step 3: Fetching transactions with Type: " + currentFilterType +
+                ", CategoryID: " + selectedCategoryId +
+                ", SearchQuery: " + searchQuery);
+
         TransactionRepository.getTransactionService(getContext())
-                .getTransactions(userId, currentFilterType)
+                .getTransactions(userId, currentFilterType, selectedCategoryId, searchQuery)
                 .enqueue(new Callback<TransactionApiResponse>() {
                     @Override
                     public void onResponse(Call<TransactionApiResponse> call, Response<TransactionApiResponse> response) {
                         swipeRefreshLayout.setRefreshing(false);
-
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<TransactionSummaryResponse> payload = response.body().getPayload();
 
-                            if (payload != null && !payload.isEmpty()) {
+                            if (payload != null && !payload.isEmpty() && payload.get(0).getTransactions() != null && !payload.get(0).getTransactions().isEmpty()) {
+                                // Data found
+                                recyclerViewTransactions.setVisibility(View.VISIBLE);
+                                layoutEmptyState.setVisibility(View.GONE);
+
                                 TransactionSummaryResponse summary = payload.get(0);
-                                summaryCardAdapter.setSummary(summary); // Cập nhật card tổng quan
+                                summaryCardAdapter.setSummary(summary);
 
                                 List<TransactionItem> transactions = summary.getTransactions();
-                                Log.d(TAG, "Transactions fetched: " + (transactions != null ? transactions.size() : "null"));
-
                                 List<DisplayableItem> displayableItems = processAndGroupTransactions(transactions);
                                 transactionListAdapter.updateData(displayableItems);
-                                Log.d(TAG, "Adapter updated with " + displayableItems.size() + " items.");
-
+                                Log.d(TAG, "Step 4: Success! Adapter updated with " + displayableItems.size() + " items.");
                             } else {
+                                // No data found
+                                Log.d(TAG, "Step 4: API Success but no transactions found.");
                                 handleEmptyOrError();
-                                Log.d(TAG, "Payload is empty or null.");
                             }
                         } else {
+                            // API Error
+                            Log.e(TAG, "Step 4: API Error. Code: " + response.code());
                             handleEmptyOrError();
-                            try {
-                                String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-                                Log.e(TAG, "API Error: " + response.code() + " - " + errorBody);
-                            } catch (IOException e) {
-                                Log.e(TAG, "Error parsing error body", e);
-                            }
                         }
                     }
 
                     @Override
                     public void onFailure(Call<TransactionApiResponse> call, Throwable t) {
                         swipeRefreshLayout.setRefreshing(false);
+                        Log.e(TAG, "Step 4: Network Failure.", t);
                         handleEmptyOrError();
-                        Log.e(TAG, "Network Failure: " + t.getMessage(), t);
-                        Toast.makeText(getContext(), "Network Error. Please check your connection.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -184,15 +299,15 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private void handleEmptyOrError() {
         summaryCardAdapter.setSummary(null);
         transactionListAdapter.updateData(new ArrayList<>());
+        recyclerViewTransactions.setVisibility(View.GONE);
+        layoutEmptyState.setVisibility(View.VISIBLE);
     }
 
     private List<DisplayableItem> processAndGroupTransactions(List<TransactionItem> transactions) {
         if (transactions == null || transactions.isEmpty()) {
             return new ArrayList<>();
         }
-
         Collections.sort(transactions, (t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()));
-
         Map<String, List<TransactionItem>> groupedMap = new LinkedHashMap<>();
         SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
         SimpleDateFormat groupKeyFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -205,30 +320,29 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                     groupedMap.computeIfAbsent(dayKey, k -> new ArrayList<>()).add(transaction);
                 }
             } catch (ParseException e) {
-                Log.e(TAG, "Error parsing transaction date: " + transaction.getTransactionDate(), e);
+                Log.e(TAG, "Error parsing transaction date", e);
             }
         }
 
         List<DisplayableItem> displayableItems = new ArrayList<>();
-        SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, MMM dd", Locale.getDefault());
+        SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
 
         for (Map.Entry<String, List<TransactionItem>> entry : groupedMap.entrySet()) {
             try {
                 Date date = groupKeyFormat.parse(entry.getKey());
                 if (date != null) {
-                    String displayDate = displayDateFormat.format(date);
-                    displayableItems.add(new DateHeaderItem(displayDate, 0)); // Bỏ qua tính dailyTotal
+                    displayableItems.add(new DateHeaderItem(displayDateFormat.format(date), 0));
                     displayableItems.addAll(entry.getValue());
                 }
             } catch (ParseException e) {
-                Log.e(TAG, "Error parsing group key date: " + entry.getKey(), e);
+                Log.e(TAG, "Error parsing group key date", e);
             }
         }
         return displayableItems;
     }
 
     private String formatCurrency(double amount) {
-        DecimalFormat formatter = new DecimalFormat("#,###.##đ");
+        DecimalFormat formatter = new DecimalFormat("#,###đ");
         return formatter.format(amount);
     }
 }

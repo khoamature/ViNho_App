@@ -31,7 +31,10 @@ public interface TransactionService {
     Call<GetTransactionResponse> updateTransaction(@Path("id") int id, @Body UpdateTransactionRequest request);
 
     @GET("transactions")
-    Call<TransactionApiResponse> getTransactions(@Query("UserId") String userId,
-                                                 @Query("CategoryType") String categoryType
+    Call<TransactionApiResponse> getTransactions(
+            @Query("UserId") String userId,
+            @Query("CategoryType") String categoryType,
+            @Query("CategoryId") String categoryId,
+            @Query("CategoryName") String categoryName
     );
 }

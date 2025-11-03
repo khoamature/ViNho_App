@@ -8,11 +8,12 @@
     android:background="#F9F9F9"
     tools:context=".ui.fragments.TransactionFragment">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <!-- Sử dụng RelativeLayout để dễ dàng quản lý việc hiện/ẩn các view -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Header với màu Gradient (GIỮ NGUYÊN) -->
+        <!-- Header với màu Gradient -->
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
@@ -20,128 +21,184 @@
             android:background="@drawable/bg_transaction_header"
             android:fitsSystemWindows="true">
 
-            <!-- ... (Toàn bộ nội dung bên trong AppBarLayout giữ nguyên) ... -->
-            <com.google.android.material.appbar.CollapsingToolbarLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <!-- Search Bar -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_search_bar">
+
+                    <ImageView
+                        android:id="@+id/ivSearchIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="12dp"
+                        android:src="@drawable/ic_search"
+                        app:tint="@color/black" />
+
+                    <EditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/ivSearchIcon"
+                        android:background="@android:color/transparent"
+                        android:hint="Search transactions..."
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:padding="12dp"
+                        android:textColor="@color/black"
+                        android:textColorHint="#A0AEC0" />
+
+                </RelativeLayout>
+
+                <!-- Filter Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <!-- Search Bar -->
-                    <!-- Search Bar - SỬA LẠI HOÀN TOÀN CẤU TRÚC NÀY -->
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_search_bar">
+                    <Button
+                        android:id="@+id/btnFilter"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Filters"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        app:icon="@drawable/ic_check_circle"
+                        app:iconTint="@color/white"
+                        app:strokeColor="@color/white" />
 
-                        <ImageView
-                            android:id="@+id/ivSearchIcon"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_centerVertical="true"
-                            android:layout_marginStart="12dp"
-                            android:src="@drawable/ic_search"
-                            app:tint="@color/black" />
-
-                        <EditText
-                            android:id="@+id/etSearch"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_toEndOf="@id/ivSearchIcon"
-                            android:background="@android:color/transparent"
-                            android:hint="Search transactions..."
-                            android:padding="12dp"
-                            android:textColor="@color/white"
-                            android:textColorHint="#A0AEC0"
-                            android:maxLines="1"
-                            android:inputType="text"/>
-
-                    </RelativeLayout>
-
-                    <!-- Filter Buttons - THAY ĐỔI HOÀN TOÀN -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center_vertical"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/btnFilter"
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:text="Filters"
-                            android:textAllCaps="false"
-                            android:textColor="@color/white"
-                            app:iconTint="@color/white"
-                            app:strokeColor="@color/white" />
-
-                        <!-- Sử dụng LinearLayout thay cho ToggleGroup -->
-                        <LinearLayout
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnAll"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
-                            android:orientation="horizontal">
+                            android:background="@drawable/bg_filter_button_selected"
+                            android:text="All"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
 
-                            <!-- Thay thế các nút trong ToggleGroup bằng Button riêng lẻ -->
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnAll"
-                                android:layout_width="0dp"
-                                android:layout_height="40dp"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:background="@drawable/bg_filter_button_selected"
-                                android:text="All"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp" />
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnExpense"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_filter_button_unselected"
+                            android:text="Expense"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
 
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnExpense"
-                                android:layout_width="0dp"
-                                android:layout_height="40dp"
-                                android:layout_weight="1"
-                                android:background="@drawable/bg_filter_button_unselected"
-                                android:text="Expense"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnIncome"
-                                android:layout_width="0dp"
-                                android:layout_height="40dp"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:background="@drawable/bg_filter_button_unselected"
-                                android:text="Income"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/white"
-                                android:textSize="12sp" />
-
-                        </LinearLayout>
-
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnIncome"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_filter_button_unselected"
+                            android:text="Income"
+                            android:textAllCaps="false"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
-            </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+                <!-- Bộ lọc Category (ban đầu ẩn) -->
+                <LinearLayout
+                    android:id="@+id/layoutCategoryFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Category"
+                        android:textAppearance="?attr/textAppearanceLabelMedium" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/autoCompleteCategory"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:text="All" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
+        <!-- RecyclerView cho danh sách giao dịch -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewTransactions"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_below="@id/appBarLayout"
             android:clipToPadding="false"
-            android:paddingBottom="16dp"
             android:paddingTop="56dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:paddingBottom="16dp"
             tools:listitem="@layout/item_transaction" />
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <!-- Layout cho trạng thái rỗng -->
+        <LinearLayout
+            android:id="@+id/layoutEmptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_empty_wallet" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="There is no transaction"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:text="Try to adjust the filter or create a new one"
+                android:textAppearance="?attr/textAppearanceBodyMedium" />
+        </LinearLayout>
+
+    </RelativeLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
