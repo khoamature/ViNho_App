@@ -62,7 +62,7 @@
             android:id="@+id/btnMenu"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@drawable/ic_right"
+            android:src="@drawable/ic_dot"
             android:padding="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"

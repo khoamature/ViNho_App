@@ -169,8 +169,8 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
             toggleGroup.check(R.id.btnExpense);
         }
         selectedCategoryType = initialType;
-        // Tải danh sách category cho lần đầu tiên
-        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
+        // Tải danh sách category cho lần đầu tiên, nhưng không xóa text đã điền sẵn
+        fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, false);
 
         // Thêm listener để tải lại category khi người dùng đổi Type
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -178,6 +178,7 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
                 if (checkedId == R.id.btnExpense) selectedCategoryType = "Expense";
                 else if (checkedId == R.id.btnIncome) selectedCategoryType = "Income";
                 else if (checkedId == R.id.btnNeutral) selectedCategoryType = "Neutral";
+                // Khi người dùng chủ động đổi Type, ta xóa lựa chọn cũ đi
                 fetchCategoriesForDialog(selectedCategoryType, actvDialogCategory, categoryAdapter, true);
             }
         });
