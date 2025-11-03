@@ -5,7 +5,7 @@
     android:id="@+id/swipeRefreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F6F9"
+    android:background="#F9F9F9"
     tools:context=".ui.fragments.TransactionFragment">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
