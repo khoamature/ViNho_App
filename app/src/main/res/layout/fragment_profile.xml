@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:background="#F9F9F9"
     tools:context=".ui.fragments.ProfileFragment">
 
     <FrameLayout
@@ -15,7 +16,6 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#F9F9F9"
             android:clipToPadding="false"
             android:paddingTop="32dp"
             android:paddingHorizontal="16dp"

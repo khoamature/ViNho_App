@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:text="Income"
                 android:textStyle="bold"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
                 android:id="@+id/tvTotalIncome"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:text="Expense"
                 android:textStyle="bold"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
                 android:id="@+id/tvTotalExpense"
@@ -78,13 +78,14 @@
                 android:layout_height="wrap_content"
                 android:text="Net"
                 android:textStyle="bold"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
                 android:id="@+id/tvNetBalance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
+                android:textColor="#3F51B5"
                 tools:text="$2755.00"
                 android:textAppearance="?attr/textAppearanceBodyMedium"/>
         </LinearLayout>

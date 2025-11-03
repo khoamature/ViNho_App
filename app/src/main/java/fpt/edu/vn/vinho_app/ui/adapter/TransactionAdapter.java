@@ -118,7 +118,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             tvDescription.setText(transaction.getDescription());
             ivCategoryIcon.setImageResource(R.drawable.ic_money);
 
-            // SỬA LẠI LOGIC: Dựa vào categoryType của chính transaction
             if ("Income".equalsIgnoreCase(transaction.getCategoryType())) {
                 tvAmount.setText(String.format(Locale.US, "+%s", formatCurrency(transaction.getAmount())));
                 tvAmount.setTextColor(Color.parseColor("#2ECC71"));
