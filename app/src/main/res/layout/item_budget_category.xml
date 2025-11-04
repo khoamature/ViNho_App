@@ -17,10 +17,9 @@
             android:id="@+id/ivCategoryIcon"
             android:layout_width="55dp"
             android:layout_height="55dp"
-            android:src="@android:drawable/ic_menu_gallery"
+            android:src="@drawable/ic_budgetcategories"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="?attr/colorPrimary" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
             android:id="@+id/tvCategoryName"
