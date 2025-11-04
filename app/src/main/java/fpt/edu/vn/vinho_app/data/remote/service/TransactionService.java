@@ -26,7 +26,7 @@ public interface TransactionService {
     Call<PagedResponse<GetTransactionResponse>> getTransactions(@Body GetPagedTransactionsRequest request);
 
     @POST("transactions")
-    Call<GetTransactionResponse> createTransaction(@Body CreateTransactionRequest request);
+    Call<Void> createTransaction(@Body CreateTransactionRequest request);
 
     @PUT("transactions/{id}")
     Call<Void> updateTransaction(@Path("id") String transactionId, @Body UpdateTransactionRequest request);

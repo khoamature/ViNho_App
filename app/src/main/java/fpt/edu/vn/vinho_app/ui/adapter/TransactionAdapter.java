@@ -13,9 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.transaction.TransactionItem;
@@ -135,14 +137,23 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             // Hiển thị thời gian
             try {
-                SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                apiFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // <-- DÒNG QUAN TRỌNG
+
+                // Format để hiển thị giờ cho người dùng (theo múi giờ của thiết bị)
                 SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+                timeFormat.setTimeZone(Calendar.getInstance().getTimeZone());
+
+                // 1. Parse chuỗi UTC từ API thành đối tượng Date
                 Date date = apiFormat.parse(transaction.getTransactionDate());
+
+                // 2. Format đối tượng Date đó ra chuỗi hiển thị theo múi giờ địa phương
                 if (date != null) {
                     tvTransactionTime.setText(timeFormat.format(date));
                 }
             } catch (ParseException e) {
                 tvTransactionTime.setText("");
+                e.printStackTrace();
             }
 
             // Thêm sự kiện click cho nút menu (3 chấm)

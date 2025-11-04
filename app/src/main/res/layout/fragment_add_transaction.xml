@@ -62,22 +62,6 @@
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/layoutAmount"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Amount"
-                app:prefixText="$"
-                app:prefixTextColor="?attr/colorOnSurface">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editAmount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layoutCategory"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
@@ -91,15 +75,33 @@
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutAmount"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Amount"
+                app:suffixText="đ"
+                app:prefixTextColor="?attr/colorOnSurface">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Date"
+                android:text="Date &amp; Time"
                 android:layout_marginTop="16dp"
                 android:textAppearance="?attr/textAppearanceLabelMedium" />
 
             <TextView
-                android:id="@+id/tvSelectedDate"
+                android:id="@+id/tvSelectedDateTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -108,7 +110,7 @@
                 android:focusable="true"
                 android:gravity="center"
                 android:padding="16dp"
-                android:text="Thứ Bảy, 01/11/2025"
+                android:text="Select Date &amp; Time"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textStyle="bold" />
 

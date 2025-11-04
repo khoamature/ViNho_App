@@ -25,6 +25,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -59,6 +60,7 @@ import fpt.edu.vn.vinho_app.ui.adapter.SummaryCardAdapter;
 import fpt.edu.vn.vinho_app.ui.adapter.TransactionAdapter;
 import fpt.edu.vn.vinho_app.ui.model.DateHeaderItem;
 import fpt.edu.vn.vinho_app.ui.model.DisplayableItem;
+import fpt.edu.vn.vinho_app.ui.viewmodel.SharedViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -67,6 +69,7 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private static final String TAG = "TransactionFragment";
 
     // Views
+    private SharedViewModel sharedViewModel;
     private SwipeRefreshLayout swipeRefreshLayout;
     private LinearLayout layoutEmptyState;
     private EditText etSearch;
@@ -95,7 +98,16 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_transaction, container, false);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
-
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        sharedViewModel.getTransactionAddedEvent().observe(getViewLifecycleOwner(), isAdded -> {
+            // isAdded là giá trị boolean từ LiveData (true)
+            if (isAdded != null && isAdded) {
+                Log.d(TAG, "Received transaction added event. Refreshing...");
+                fetchTransactions();
+                // Reset lại sự kiện để không bị gọi lại khi quay lại Fragment
+                sharedViewModel.onTransactionEventHandled();
+            }
+        });
         mapViews(view);
         setupRecyclerView();
         setupListeners();
@@ -235,6 +247,11 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         });
     }
 
+    public void fetchTransactionsPublic() {
+        Log.d(TAG, "Refreshing transactions from MainActivity...");
+        fetchTransactions();
+    }
+
     private void fetchTransactions() {
         swipeRefreshLayout.setRefreshing(true);
         String userId = sharedPreferences.getString("userId", "");
@@ -290,18 +307,31 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         if (transactions == null || transactions.isEmpty()) return new ArrayList<>();
         Collections.sort(transactions, (t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()));
         Map<String, List<TransactionItem>> groupedMap = new LinkedHashMap<>();
-        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+        // Format để đọc chuỗi từ API (chuẩn UTC)
+        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+        apiFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        // Format để tạo key gom nhóm (THEO MÚI GIỜ ĐỊA PHƯƠNG)
         SimpleDateFormat groupKeyFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        // Quan trọng: Set múi giờ của thiết bị cho groupKeyFormat
+        groupKeyFormat.setTimeZone(Calendar.getInstance().getTimeZone());
+
         for (TransactionItem transaction : transactions) {
             try {
                 Date date = apiFormat.parse(transaction.getTransactionDate());
                 if (date != null) {
-                    groupedMap.computeIfAbsent(groupKeyFormat.format(date), k -> new ArrayList<>()).add(transaction);
+                    // Chuyển đổi sang ngày của địa phương để lấy key
+                    String dayKey = groupKeyFormat.format(date);
+                    groupedMap.computeIfAbsent(dayKey, k -> new ArrayList<>()).add(transaction);
                 }
-            } catch (ParseException e) { Log.e(TAG, "Error parsing transaction date", e); }
+            } catch (ParseException e) {
+                Log.e(TAG, "Error parsing transaction date", e);
+            }
         }
         List<DisplayableItem> displayableItems = new ArrayList<>();
+        // Format để hiển thị cho người dùng (THEO MÚI GIỜ ĐỊA PHƯƠNG)
         SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+        displayDateFormat.setTimeZone(Calendar.getInstance().getTimeZone());
         for (Map.Entry<String, List<TransactionItem>> entry : groupedMap.entrySet()) {
             try {
                 Date date = groupKeyFormat.parse(entry.getKey());

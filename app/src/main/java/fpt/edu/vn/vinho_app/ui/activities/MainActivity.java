@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
@@ -18,17 +19,21 @@ import fpt.edu.vn.vinho_app.ui.fragments.HomeFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.InsightsFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.ProfileFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.TransactionFragment;
+import fpt.edu.vn.vinho_app.ui.viewmodel.SharedViewModel;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private MaterialCardView fabAdd;
     private FrameLayout frameContainer;
 
+    private SharedViewModel sharedViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
         bottomNav = findViewById(R.id.bottom_nav);
         fabAdd = findViewById(R.id.fab_add);
         frameContainer = findViewById(R.id.frame_container);
@@ -37,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         if (fabAdd != null) {
             fabAdd.setOnClickListener(v -> {
                 AddTransactionFragment addTransactionFragment = new AddTransactionFragment();
-                addTransactionFragment.show(getSupportFragmentManager(), "add_transaction");
+                addTransactionFragment.show(getSupportFragmentManager(), addTransactionFragment.getTag());
             });
         }
 
