@@ -138,8 +138,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             // Hiển thị thời gian
             try {
                 SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-                apiFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // <-- DÒNG QUAN TRỌNG
-
                 // Format để hiển thị giờ cho người dùng (theo múi giờ của thiết bị)
                 SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
                 timeFormat.setTimeZone(Calendar.getInstance().getTimeZone());

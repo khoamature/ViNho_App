@@ -304,34 +304,32 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     }
 
     private List<DisplayableItem> processAndGroupTransactions(List<TransactionItem> transactions) {
-        if (transactions == null || transactions.isEmpty()) return new ArrayList<>();
+        if (transactions == null || transactions.isEmpty()) {
+            return new ArrayList<>();
+        }
         Collections.sort(transactions, (t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()));
-        Map<String, List<TransactionItem>> groupedMap = new LinkedHashMap<>();
-        // Format để đọc chuỗi từ API (chuẩn UTC)
-        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-        apiFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        // Format để tạo key gom nhóm (THEO MÚI GIỜ ĐỊA PHƯƠNG)
+        Map<String, List<TransactionItem>> groupedMap = new LinkedHashMap<>();
+        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
         SimpleDateFormat groupKeyFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        // Quan trọng: Set múi giờ của thiết bị cho groupKeyFormat
         groupKeyFormat.setTimeZone(Calendar.getInstance().getTimeZone());
 
         for (TransactionItem transaction : transactions) {
             try {
                 Date date = apiFormat.parse(transaction.getTransactionDate());
                 if (date != null) {
-                    // Chuyển đổi sang ngày của địa phương để lấy key
                     String dayKey = groupKeyFormat.format(date);
                     groupedMap.computeIfAbsent(dayKey, k -> new ArrayList<>()).add(transaction);
                 }
             } catch (ParseException e) {
-                Log.e(TAG, "Error parsing transaction date", e);
+                Log.e(TAG, "Error parsing transaction date: " + transaction.getTransactionDate(), e);
             }
         }
+
         List<DisplayableItem> displayableItems = new ArrayList<>();
-        // Format để hiển thị cho người dùng (THEO MÚI GIỜ ĐỊA PHƯƠNG)
         SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
         displayDateFormat.setTimeZone(Calendar.getInstance().getTimeZone());
+
         for (Map.Entry<String, List<TransactionItem>> entry : groupedMap.entrySet()) {
             try {
                 Date date = groupKeyFormat.parse(entry.getKey());
@@ -339,14 +337,11 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                     displayableItems.add(new DateHeaderItem(displayDateFormat.format(date), 0));
                     displayableItems.addAll(entry.getValue());
                 }
-            } catch (ParseException e) { Log.e(TAG, "Error parsing group key date", e); }
+            } catch (ParseException e) {
+                Log.e(TAG, "Error parsing group key date: " + entry.getKey(), e);
+            }
         }
         return displayableItems;
-    }
-
-    private String formatCurrency(double amount) {
-        DecimalFormat formatter = new DecimalFormat("#,###đ");
-        return formatter.format(amount);
     }
 
     // --- LOGIC SỬA/XÓA ---
