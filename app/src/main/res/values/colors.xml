@@ -8,4 +8,11 @@
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="pie_color_1">#4CAF50</color> <!-- Xanh lá cây -->
+    <color name="pie_color_2">#FF9800</color> <!-- Vàng cam -->
+    <color name="pie_color_3">#2196F3</color> <!-- Xanh dương -->
+    <color name="pie_color_4">#F44336</color> <!-- Đỏ -->
+    <color name="pie_color_5">#9C27B0</color> <!-- Tím -->
+
 </resources>

@@ -72,6 +72,7 @@ dependencies {
 
     implementation("com.google.android.material:material:1.11.0")
 
+
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     // Add converter libraries as needed, e.g., for JSON parsing
@@ -88,4 +89,5 @@ dependencies {
     // UI
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.google.android.material:material:1.10.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
