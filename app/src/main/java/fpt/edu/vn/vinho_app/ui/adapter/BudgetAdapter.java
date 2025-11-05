@@ -86,14 +86,32 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
         // Phương thức bind dữ liệu
         public void bind(CategoryOverview budget, final OnBudgetActionsListener listener) {
+            // 1. Bind dữ liệu cơ bản
             tvCategoryName.setText(budget.getCategoryName());
-            tvSpentAmount.setText(formatCurrency(budget.getSpentAmount()));
-            tvBudgetedAmount.setText(String.format("/ %s", formatCurrency(budget.getBudgetedAmount())));
-            tvRemainingAmount.setText(String.format("Remaining %s", formatCurrency(budget.getRemainingAmount())));
 
+            // Lấy các giá trị số
+            double spentAmount = budget.getSpentAmount();
+            double budgetedAmount = budget.getBudgetedAmount();
+
+            // Format và hiển thị tiền tệ
+            // Sử dụng Math.abs() để luôn hiển thị số dương cho spentAmount và budgetedAmount
+            tvSpentAmount.setText(String.format(Locale.US, "%s ", formatCurrency(Math.abs(spentAmount))));
+            tvBudgetedAmount.setText(String.format(Locale.US, "/ %s", formatCurrency(budgetedAmount)));
+
+            // 2. Tính toán phần trăm và progress bar
+            double progressValue = 0;
+            if (budgetedAmount > 0) {
+                progressValue = (Math.abs(spentAmount) / budgetedAmount) * 100.0;
+            }
+
+            // 3. Cập nhật ProgressBar và TextView phần trăm
+            progressBar.setProgress((int) progressValue);
+            tvUsedPercentage.setText(String.format(Locale.US, "%d%%", (int) progressValue));
+
+            // 4. Xử lý sự kiện cho nút menu (không đổi)
             btnMenu.setOnClickListener(view -> {
                 PopupMenu popup = new PopupMenu(view.getContext(), btnMenu);
-                popup.getMenuInflater().inflate(R.menu.budget_item_menu, popup.getMenu()); // Cần tạo file menu này
+                popup.getMenuInflater().inflate(R.menu.budget_item_menu, popup.getMenu());
 
                 popup.setOnMenuItemClickListener(item -> {
                     int itemId = item.getItemId();
@@ -109,22 +127,9 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
                 popup.show();
             });
-            // Tính toán và cập nhật progress bar
-            if (budget.getBudgetedAmount() > 0) {
-                // Đảm bảo phép chia là số thực để có kết quả chính xác
-                double progressValue = (budget.getSpentAmount() / budget.getBudgetedAmount()) * 100.0;
-                progressBar.setProgress((int) progressValue);
-            } else {
-                progressBar.setProgress(0);
-            }
-            double progressValue = 0;
-            if (budget.getBudgetedAmount() > 0) {
-                progressValue = (budget.getSpentAmount() / budget.getBudgetedAmount()) * 100.0;
-            }
-            tvUsedPercentage.setText(String.format(Locale.US, "%d%%", (int) progressValue));
         }
 
-        // Helper method để format tiền tệ
+        // Helper method để format tiền tệ (không đổi)
         private String formatCurrency(double amount) {
             DecimalFormat formatter = new DecimalFormat("#,###đ");
             return formatter.format(amount);
