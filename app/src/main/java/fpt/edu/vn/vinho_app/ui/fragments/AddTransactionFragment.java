@@ -198,7 +198,6 @@ public class AddTransactionFragment extends BottomSheetDialogFragment {
         String description = editNote.getText().toString();
         String userId = sharedPreferences.getString("userId", "");
 
-        // --- Kiểm tra dữ liệu đầu vào ---
         if (amountStr.isEmpty()) {
             Toast.makeText(getContext(), "Please enter an amount", Toast.LENGTH_SHORT).show();
             return;
@@ -211,10 +210,9 @@ public class AddTransactionFragment extends BottomSheetDialogFragment {
         double amount = Double.parseDouble(amountStr);
 
         // --- Định dạng ngày giờ sang ISO 8601 UTC ---
-        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String transactionDate = isoFormat.format(selectedDateTime.getTime());
-
+        SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+        String transactionDate = apiDateFormat.format(selectedDateTime.getTime());
+        Log.d(TAG, "Creating transaction with date: " + transactionDate); // Thêm log để kiểm tra
         // Tạo request object
         CreateTransactionRequest request = new CreateTransactionRequest(userId, selectedCategoryId, amount, description, transactionDate);
 

@@ -39,6 +39,9 @@ public interface TransactionService {
             @Query("UserId") String userId,
             @Query("CategoryType") String categoryType,
             @Query("CategoryId") String categoryId,
-            @Query("CategoryName") String categoryName
+            @Query("CategoryName") String categoryName,
+            @Query("FromDate") String fromDate,
+            @Query("ToDate") String toDate,
+            @Query("PageSize") Integer pageSize
     );
 }

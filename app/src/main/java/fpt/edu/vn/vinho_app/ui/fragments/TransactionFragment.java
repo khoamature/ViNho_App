@@ -19,7 +19,9 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -72,6 +74,8 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private SharedViewModel sharedViewModel;
     private SwipeRefreshLayout swipeRefreshLayout;
     private LinearLayout layoutEmptyState;
+    private ImageView btnPreviousMonth, btnNextMonth;
+    private TextView tvCurrentMonth;
     private EditText etSearch;
     private Button btnAll, btnIncome, btnExpense, btnFilter;
     private LinearLayout layoutCategoryFilter;
@@ -88,6 +92,8 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     private String currentFilterType = null;
     private List<GetCategoryResponse> categoryList = new ArrayList<>();
     private String selectedCategoryId = null;
+
+    private Calendar currentCalendar;
 
     // Debouncing for search
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
@@ -108,6 +114,8 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                 sharedViewModel.onTransactionEventHandled();
             }
         });
+        currentCalendar = Calendar.getInstance();
+
         mapViews(view);
         setupRecyclerView();
         setupListeners();
@@ -115,6 +123,7 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
 
         // Initial data load
         updateButtonStyles(btnAll);
+        updateMonthDisplay();
         fetchCategoriesAndThenTransactions(null);
 
         return view;
@@ -131,6 +140,9 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         btnFilter = view.findViewById(R.id.btnFilter);
         layoutCategoryFilter = view.findViewById(R.id.layoutCategoryFilter);
         autoCompleteCategory = view.findViewById(R.id.autoCompleteCategory);
+        btnPreviousMonth = view.findViewById(R.id.btnPreviousMonth);
+        btnNextMonth = view.findViewById(R.id.btnNextMonth);
+        tvCurrentMonth = view.findViewById(R.id.tvCurrentMonth);
     }
 
     private void setupRecyclerView() {
@@ -148,6 +160,8 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         btnIncome.setOnClickListener(this);
         btnExpense.setOnClickListener(this);
         btnFilter.setOnClickListener(this);
+        btnPreviousMonth.setOnClickListener(this);
+        btnNextMonth.setOnClickListener(this);
 
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -175,7 +189,19 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
             fetchCategoriesAndThenTransactions(currentFilterType);
         } else if (id == R.id.btnFilter) {
             layoutCategoryFilter.setVisibility(layoutCategoryFilter.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+        } else if (id == R.id.btnPreviousMonth) {
+            currentCalendar.add(Calendar.MONTH, -1); // Lùi 1 tháng
+            updateMonthDisplay();
+            fetchTransactions();
+        } else if (id == R.id.btnNextMonth) {
+            currentCalendar.add(Calendar.MONTH, 1); // Tới 1 tháng
+            updateMonthDisplay();
+            fetchTransactions();
         }
+    }
+    private void updateMonthDisplay() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy", Locale.ENGLISH);
+        tvCurrentMonth.setText(dateFormat.format(currentCalendar.getTime()));
     }
 
     private void updateButtonStyles(Button selectedButton) {
@@ -259,11 +285,21 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
 
         String searchQuery = etSearch.getText().toString().trim();
         if (searchQuery.isEmpty()) searchQuery = null;
+        SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
+        Calendar tempCal = (Calendar) currentCalendar.clone();
+        tempCal.set(Calendar.DAY_OF_MONTH, 1);
+        String fromDate = apiDateFormat.format(tempCal.getTime());
+
+        tempCal.set(Calendar.DAY_OF_MONTH, tempCal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String toDate = apiDateFormat.format(tempCal.getTime());
+
+        // Đặt PageSize lớn để lấy tất cả giao dịch trong tháng
+        Integer pageSize = 1000;
 
         Log.d(TAG, "Step 3: Fetching transactions with Type: " + currentFilterType + ", CategoryID: " + selectedCategoryId + ", SearchQuery: " + searchQuery);
-
         TransactionRepository.getTransactionService(getContext())
-                .getTransactions(userId, currentFilterType, selectedCategoryId, searchQuery)
+                .getTransactions(userId, currentFilterType, selectedCategoryId, searchQuery, fromDate, toDate, pageSize)
                 .enqueue(new Callback<TransactionApiResponse>() {
                     @Override
                     public void onResponse(Call<TransactionApiResponse> call, Response<TransactionApiResponse> response) {
@@ -327,7 +363,7 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
         }
 
         List<DisplayableItem> displayableItems = new ArrayList<>();
-        SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", new Locale("vi", "VN"));
+        SimpleDateFormat displayDateFormat = new SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.ENGLISH);
         displayDateFormat.setTimeZone(Calendar.getInstance().getTimeZone());
 
         for (Map.Entry<String, List<TransactionItem>> entry : groupedMap.entrySet()) {
@@ -473,9 +509,9 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
             }
             double newAmount = Double.parseDouble(editAmount.getText().toString());
             String newDescription = editDescription.getText().toString();
-            SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
-            isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-            String newDate = isoFormat.format(calendar.getTime());
+            SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+            String newDate = apiDateFormat.format(calendar.getTime());
+            Log.d(TAG, "Updating transaction with date: " + newDate);
 
             UpdateTransactionRequest request = new UpdateTransactionRequest(selectedDialogCategoryId[0], newAmount, newDescription, newDate);
             updateTransaction(item.getId(), request);
