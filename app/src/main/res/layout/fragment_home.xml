@@ -59,91 +59,111 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvCurrentBalanceAmount">
 
-                <!-- Thẻ Income -->
-                <LinearLayout
+                <!-- Thẻ Income - dùng MaterialCardView -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_card"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#EEEEEE"
+                    app:strokeWidth="1dp"
+                    app:cardBackgroundColor="@android:color/transparent">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:background="@drawable/bg_card_home">
 
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_income"
-                            app:tint="@color/black" />
-
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="Income"
-                            android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:textStyle="bold"/>
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_income"
+                                app:tint="@color/black" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="Income"
+                                android:textColor="@color/black"
+                                android:textSize="16sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvOverviewIncome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="#3F51B5"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="5.000.000đ" />
                     </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                    <TextView
-                        android:id="@+id/tvOverviewIncome"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="#3F51B5"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        tools:text="5.000.000đ" />
-                </LinearLayout>
-
-                <!-- Thẻ Expenses -->
-                <LinearLayout
+                <!-- Thẻ Expenses - dùng MaterialCardView -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_card"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#EEEEEE"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:background="@drawable/bg_card_home">
 
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_expense"
-                            app:tint="@color/black" />
-
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="Expenses"
-                            android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tvOverviewExpense"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="#F44336"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        tools:text="-140.000đ" />
-                </LinearLayout>
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_expense"
+                                app:tint="@color/black" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="Expenses"
+                                android:textColor="@color/black"
+                                android:textSize="16sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvOverviewExpense"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="#F44336"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="-140.000đ" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -169,7 +189,7 @@
                     android:paddingHorizontal="16dp"
                     android:layout_marginTop="24dp">
 
-                    <com.google.android.material.card.MaterialCardView
+                    <LinearLayout
                         android:id="@+id/btnInsight"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -180,14 +200,13 @@
                         app:strokeWidth="1dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:padding="16dp"
-                            android:orientation="vertical">
+                        android:gravity="center"
+                        android:elevation="2dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:orientation="vertical"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:background="@drawable/bg_home_action_button">
 
                             <ImageView
                                 android:layout_width="30dp"
@@ -199,12 +218,12 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:text="Insight"
-                                android:textSize="16sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
 
-                    <com.google.android.material.card.MaterialCardView
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/btnReports"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -213,30 +232,30 @@
                         app:cardCornerRadius="16dp"
                         app:strokeColor="#E2E8F0"
                         app:strokeWidth="1dp"
+                        android:orientation="vertical"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:gravity="center"
+                        android:elevation="2dp"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:background="@drawable/bg_home_action_button">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:src="@drawable/ic_report"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:padding="16dp"
-                            android:orientation="vertical">
-                            <ImageView
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                android:src="@drawable/ic_report"/>
+                            android:layout_marginTop="8dp"
+                            android:text="Reports"
+                            android:textSize="17sp"
+                            android:textStyle="bold"/>
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Reports"
-                                android:textSize="16sp"
-                                android:textStyle="bold"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- 3. BIỂU ĐỒ TRÒN -->

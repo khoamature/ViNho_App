@@ -18,6 +18,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.user.UpdateProfileRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
@@ -37,6 +41,8 @@ public class ProfileFragment extends Fragment {
     private SharedPreferences sharedPreferences;
     private Button btnEditSave;
     private boolean isEditMode = false;
+    private GoogleSignInClient mGoogleSignInClient;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,6 +57,13 @@ public class ProfileFragment extends Fragment {
         btnEditSave = view.findViewById(R.id.btnEditSave);
         Button btnSync = view.findViewById(R.id.btnSync);
         View progressBarContainer = view.findViewById(R.id.progressBarContainer);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(requireActivity(), gso);
+
 
         if (btnSync != null) {
             btnSync.setVisibility(View.GONE);
@@ -166,12 +179,19 @@ public class ProfileFragment extends Fragment {
     }
 
     private void logout() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.apply();
 
-        Intent intent = new Intent(getActivity(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        mGoogleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+            Log.d(TAG, "Google Sign-Out completed.");
+            Toast.makeText(getContext(), "Đăng xuất thành công", Toast.LENGTH_SHORT).show();// Xóa SharedPreferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.apply();
+
+            // Chuyển về màn hình Login
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            // Các cờ này đảm bảo người dùng không thể nhấn "Back" để quay lại màn hình Profile
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
     }
 }
