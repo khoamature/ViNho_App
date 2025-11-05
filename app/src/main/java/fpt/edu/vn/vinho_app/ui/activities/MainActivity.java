@@ -1,9 +1,7 @@
 package fpt.edu.vn.vinho_app.ui.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -16,12 +14,12 @@ import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.ui.fragments.AddTransactionFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.BudgetFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.HomeFragment;
-import fpt.edu.vn.vinho_app.ui.fragments.InsightsFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.ProfileFragment;
+import fpt.edu.vn.vinho_app.ui.fragments.ReportFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.TransactionFragment;
 import fpt.edu.vn.vinho_app.ui.viewmodel.SharedViewModel;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements HomeFragment.OnHomeFragmentInteractionListener {
     private BottomNavigationView bottomNav;
     private MaterialCardView fabAdd;
     private FrameLayout frameContainer;
@@ -88,5 +86,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onReportsButtonClicked() {
+        loadFragment(new ReportFragment());
     }
 }

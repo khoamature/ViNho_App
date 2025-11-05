@@ -26,6 +26,7 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.material.card.MaterialCardView;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -45,13 +46,29 @@ import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
-
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView tvCurrentBalanceAmount, tvOverviewIncome, tvOverviewExpense;
+    private MaterialCardView btnInsight, btnReports;
     private PieChart pieChart;
     private RecyclerView recyclerRecentTransactions;
     private RecentTransactionAdapter recentTransactionAdapter;
     private SharedPreferences sharedPreferences;
+
+    public interface OnHomeFragmentInteractionListener {
+        void onReportsButtonClicked();
+    }
+
+    private OnHomeFragmentInteractionListener mListener;
+
+    @Override
+    public void onAttach(@NonNull  Context context) {
+        super.onAttach(context);
+        if (context instanceof OnHomeFragmentInteractionListener) {
+            mListener = (OnHomeFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement  OnHomeFragmentInteractionListener");
+        }
+    }
 
     @Nullable
     @Override
@@ -62,11 +79,22 @@ public class HomeFragment extends Fragment {
         mapViews(view);
         setupRecyclerView();
         setupPieChart();
+        setupListeners();
 
         swipeRefreshLayout.setOnRefreshListener(this::fetchHomeData);
         fetchHomeData();
 
         return view;
+    }
+
+    // ...
+    private void setupListeners() {
+        btnReports.setOnClickListener(v -> {
+            if (mListener  != null) {
+                // 2. Nhờ Activity cha xử lý việc chuyển fragment
+                mListener.onReportsButtonClicked();
+            }
+        });
     }
 
     private void mapViews(View view) {
@@ -76,6 +104,8 @@ public class HomeFragment extends Fragment {
         tvOverviewExpense = view.findViewById(R.id.tvOverviewExpense);
         pieChart = view.findViewById(R.id.pieChart);
         recyclerRecentTransactions = view.findViewById(R.id.recyclerRecentTransactions);
+        btnInsight = view.findViewById(R.id.btnInsight);
+        btnReports = view.findViewById(R.id.btnReports);
     }
 
     private void setupRecyclerView() {
