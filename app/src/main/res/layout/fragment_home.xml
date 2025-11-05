@@ -290,14 +290,26 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Spending by Category"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textStyle="bold"/>
+                            android:textSize="13sp"
+                            android:textStyle="italic"/>
 
-                        <com.github.mikephil.charting.charts.PieChart
-                            android:id="@+id/pieChart"
+                        <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="250dp"
-                            android:layout_marginTop="16dp"/>
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp">
+
+                            <com.github.mikephil.charting.charts.PieChart
+                                android:id="@+id/pieChart"
+                                android:layout_width="match_parent"
+                                android:layout_height="250dp"
+                                android:layout_marginTop="16dp"/>
+
+                            <!-- Layout trạng thái rỗng -->
+                            <include
+                                android:id="@+id/emptyStatePieChart"
+                                layout="@layout/empty_state_view" />
+
+                        </FrameLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -317,17 +329,28 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Recent Transactions"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textStyle="bold"/>
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerRecentTransactions"
+                        android:textSize="13sp"
+                        android:textStyle="italic"/>
+                    <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false"
-                        android:layout_marginTop="12dp"
-                        tools:itemCount="5"
-                        tools:listitem="@layout/item_recent_transaction"/>
+                        android:layout_marginTop="12dp">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recyclerRecentTransactions"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false"
+                            android:layout_marginTop="12dp"
+                            tools:itemCount="5"
+                            tools:listitem="@layout/item_recent_transaction"/>
+
+                        <!-- Layout trạng thái rỗng -->
+                        <include
+                            android:id="@+id/emptyStateRecent"
+                            layout="@layout/empty_state_view" />
+
+                    </FrameLayout>
                 </LinearLayout>
 
             </LinearLayout>

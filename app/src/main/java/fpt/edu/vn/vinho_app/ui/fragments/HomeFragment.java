@@ -50,6 +50,7 @@ public class HomeFragment extends Fragment {
     private TextView tvCurrentBalanceAmount, tvOverviewIncome, tvOverviewExpense;
     private MaterialCardView btnInsight, btnReports;
     private PieChart pieChart;
+    private View emptyStatePieChart, emptyStateRecent;
     private RecyclerView recyclerRecentTransactions;
     private RecentTransactionAdapter recentTransactionAdapter;
     private SharedPreferences sharedPreferences;
@@ -106,6 +107,8 @@ public class HomeFragment extends Fragment {
         recyclerRecentTransactions = view.findViewById(R.id.recyclerRecentTransactions);
         btnInsight = view.findViewById(R.id.btnInsight);
         btnReports = view.findViewById(R.id.btnReports);
+        emptyStatePieChart = view.findViewById(R.id.emptyStatePieChart);
+        emptyStateRecent = view.findViewById(R.id.emptyStateRecent);
     }
 
     private void setupRecyclerView() {
@@ -169,11 +172,14 @@ public class HomeFragment extends Fragment {
                                 updateHeader(data);
                                 updatePieChart(data.getExpenseByCategoryPercentage());
 
-                                if (data.getRecentTransactions() != null) {
+                                if (data.getRecentTransactions() != null && !data.getRecentTransactions().isEmpty()) {
+                                    recyclerRecentTransactions.setVisibility(View.VISIBLE);
+                                    emptyStateRecent.setVisibility(View.GONE);
                                     recentTransactionAdapter.updateData(data.getRecentTransactions());
-                                    Log.d(TAG, "Recent transactions updated with " + data.getRecentTransactions().size() + " items.");
                                 } else {
-                                    recentTransactionAdapter.updateData(new ArrayList<>());
+                                    recyclerRecentTransactions.setVisibility(View.GONE);
+                                    emptyStateRecent.setVisibility(View.VISIBLE);
+                                    recentTransactionAdapter.updateData(new ArrayList<>()); // Xóa dữ liệu cũ
                                 }
                             } else {
                                 Log.w(TAG, "Payload is null.");
@@ -206,9 +212,11 @@ public class HomeFragment extends Fragment {
     private void updatePieChart(Map<String, Double> expenseData) {
         if (expenseData == null || expenseData.isEmpty()) {
             pieChart.setVisibility(View.GONE);
+            emptyStatePieChart.setVisibility(View.VISIBLE);
             return;
         }
         pieChart.setVisibility(View.VISIBLE);
+        emptyStatePieChart.setVisibility(View.GONE);
 
         ArrayList<PieEntry> entries = new ArrayList<>();
         for (Map.Entry<String, Double> entry : expenseData.entrySet()) {

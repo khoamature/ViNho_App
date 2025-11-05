@@ -274,11 +274,22 @@
                         android:textSize="13sp"
                         android:textStyle="italic"/>
 
-                    <com.github.mikephil.charting.charts.LineChart
-                        android:id="@+id/lineChart"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="250dp" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp">
 
+                        <com.github.mikephil.charting.charts.LineChart
+                            android:id="@+id/lineChart"
+                            android:layout_width="match_parent"
+                            android:layout_height="250dp" />
+
+                        <!-- Layout trạng thái rỗng -->
+                        <include
+                            android:id="@+id/emptyStateLineChart"
+                            layout="@layout/empty_state_view" />
+
+                    </FrameLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -302,13 +313,22 @@
                         android:textSize="13sp"
                         android:textStyle="italic"/>
 
-                    <com.github.mikephil.charting.charts.BarChart
-                        android:id="@+id/barChart"
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="250dp" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp">
 
+                        <com.github.mikephil.charting.charts.BarChart
+                            android:id="@+id/barChart"
+                            android:layout_width="match_parent"
+                            android:layout_height="250dp" />
+
+                        <!-- Layout trạng thái rỗng -->
+                        <include
+                            android:id="@+id/emptyStateBarChart"
+                            layout="@layout/empty_state_view" />
+                    </FrameLayout>
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Danh sách chi tiết Category -->
@@ -331,14 +351,24 @@
                         android:textSize="13sp"
                         android:textStyle="italic"/>
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerCategoryDetails"
+                    <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:nestedScrollingEnabled="false"
-                        tools:listitem="@layout/item_category_detail" />
+                        android:layout_marginTop="12dp">
 
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/recyclerCategoryDetails"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:nestedScrollingEnabled="false"
+                            tools:listitem="@layout/item_category_detail" />
+
+                        <include
+                            android:id="@+id/emptyStateCategoryDetails"
+                            layout="@layout/empty_state_view" />
+
+                    </FrameLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

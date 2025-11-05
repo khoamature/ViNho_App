@@ -55,6 +55,7 @@ public class ReportFragment extends Fragment {
     private TextView tvTotalIncome, tvTotalExpense, tvSavings;
     private LineChart lineChart;
     private BarChart barChart;
+    private View emptyStateLineChart, emptyStateBarChart, emptyStateCategoryDetails;
     private RecyclerView recyclerCategoryDetails;
     private CategoryDetailAdapter categoryDetailAdapter;
     private String currentRange = "Monthly"; // Mặc định
@@ -97,6 +98,9 @@ public class ReportFragment extends Fragment {
         lineChart = view.findViewById(R.id.lineChart);
         barChart = view.findViewById(R.id.barChart);
         recyclerCategoryDetails = view.findViewById(R.id.recyclerCategoryDetails);
+        emptyStateLineChart = view.findViewById(R.id.emptyStateLineChart);
+        emptyStateBarChart = view.findViewById(R.id.emptyStateBarChart);
+        emptyStateCategoryDetails = view.findViewById(R.id.emptyStateCategoryDetails);
     }
 
     private void setupRecyclerView() {
@@ -177,18 +181,25 @@ public class ReportFragment extends Fragment {
         updateBarChart(data.getSpendingByCategory());
 
         // Update Category Details RecyclerView
-        if (data.getCategoryDetails() != null) {
+        if (data.getCategoryDetails() != null && !data.getCategoryDetails().isEmpty()) {
+            recyclerCategoryDetails.setVisibility(View.VISIBLE);
+            emptyStateCategoryDetails.setVisibility(View.GONE);
             categoryDetailAdapter.updateData(data.getCategoryDetails());
+        } else {
+            recyclerCategoryDetails.setVisibility(View.GONE);
+            emptyStateCategoryDetails.setVisibility(View.VISIBLE);
+            categoryDetailAdapter.updateData(new ArrayList<>());
         }
     }
 
     private void updateLineChart(List<String> labels, List<Double> incomeData, List<Double> expenseData) {
         if (labels == null || labels.isEmpty()) {
-            lineChart.clear();
-            lineChart.invalidate();
+            lineChart.setVisibility(View.GONE);
+            emptyStateLineChart.setVisibility(View.VISIBLE);
             return;
         }
-
+        lineChart.setVisibility(View.VISIBLE);
+        emptyStateLineChart.setVisibility(View.GONE);
         ArrayList<Entry> incomeEntries = new ArrayList<>();
         ArrayList<Entry> expenseEntries = new ArrayList<>();
 
@@ -228,9 +239,11 @@ public class ReportFragment extends Fragment {
     private void updateBarChart(Map<String, Double> spendingData) {
         if (spendingData == null || spendingData.isEmpty()) {
             barChart.setVisibility(View.GONE);
+            emptyStateBarChart.setVisibility(View.VISIBLE);
             return;
         }
         barChart.setVisibility(View.VISIBLE);
+        emptyStateBarChart.setVisibility(View.GONE);
 
         ArrayList<BarEntry> entries = new ArrayList<>();
         ArrayList<String> labels = new ArrayList<>(spendingData.keySet());

@@ -89,7 +89,7 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             tvCategoryName.setText(budget.getCategoryName());
             tvSpentAmount.setText(formatCurrency(budget.getSpentAmount()));
             tvBudgetedAmount.setText(String.format("/ %s", formatCurrency(budget.getBudgetedAmount())));
-            tvRemainingAmount.setText(String.format("Còn lại %s", formatCurrency(budget.getRemainingAmount())));
+            tvRemainingAmount.setText(String.format("Remaining %s", formatCurrency(budget.getRemainingAmount())));
 
             btnMenu.setOnClickListener(view -> {
                 PopupMenu popup = new PopupMenu(view.getContext(), btnMenu);
