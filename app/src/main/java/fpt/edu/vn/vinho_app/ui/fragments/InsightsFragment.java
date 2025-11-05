@@ -38,23 +38,29 @@ import retrofit2.Response;
 public class InsightsFragment extends Fragment {
     private static final String TAG = "InsightsFragment";
 
-    // Loading progressbar
+    public interface OnInsightFragmentInteractionListener {
+        void onChatbotButtonClicked();
+    }
+
+    private OnInsightFragmentInteractionListener mListener;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnInsightFragmentInteractionListener) {
+            mListener = (OnInsightFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString() + " must implement OnInsightFragmentInteractionListener");
+        }
+    }
+
+
     private ProgressBar progressBar;
     private NestedScrollView nestedScrollView;
-
-    // Views for Insight Cards
-    private View cardBudgetAlert, cardSpendingPattern, cardSavingsRate, cardMonthlyGoal;
     private TextView tvBudgetAlertDesc, tvSpendingPatternDesc, tvSavingsRateDesc, tvMonthlyGoalDesc;
-
-    // RecyclerView for Recommended Actions
     private RecyclerView recyclerRecommendedActions;
     private RecommendedActionsAdapter actionsAdapter;
-
-    // Views for Chatbot
     private FloatingActionButton fabChatbot;
-    private FrameLayout chatbotContainer;
-    private boolean isChatbotOpen = false;
-
     private SharedPreferences sharedPreferences;
 
     @Override
@@ -70,8 +76,6 @@ public class InsightsFragment extends Fragment {
         mapViews(view);
         setupRecyclerView();
         setupListeners();
-
-        // Tải dữ liệu từ API
         fetchInsightData();
     }
 
@@ -79,53 +83,40 @@ public class InsightsFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         nestedScrollView = view.findViewById(R.id.nestedScrollView);
 
-        // Ánh xạ các thẻ
-        cardBudgetAlert = view.findViewById(R.id.cardBudgetAlert);
-        cardSpendingPattern = view.findViewById(R.id.cardSpendingPattern);
-        cardSavingsRate = view.findViewById(R.id.cardSavingsRate);
-        cardMonthlyGoal = view.findViewById(R.id.cardMonthlyGoal);
-
-        // Thẻ Budget Alert
-        cardBudgetAlert = view.findViewById(R.id.cardBudgetAlert);
-        ImageView ivBudgetAlert = cardBudgetAlert.findViewById(R.id.ivCardIcon);
+        // Ánh xạ các thẻ và các view con bên trong chúng
+        View cardBudgetAlert = view.findViewById(R.id.cardBudgetAlert);
+        setupInsightCard(cardBudgetAlert, "Budget Alert", R.drawable.ic_alert, R.color.icon_red, R.drawable.bg_icon_circle_red);
         tvBudgetAlertDesc = cardBudgetAlert.findViewById(R.id.tvCardDescription);
-        ((TextView) cardBudgetAlert.findViewById(R.id.tvCardTitle)).setText("Budget Alert");
-        ivBudgetAlert.setImageResource(R.drawable.ic_alert);
-        ivBudgetAlert.setBackgroundResource(R.drawable.bg_icon_circle_red);
-        ivBudgetAlert.setColorFilter(ContextCompat.getColor(requireContext(), R.color.icon_red), android.graphics.PorterDuff.Mode.SRC_IN);
 
-        // Thẻ Spending Pattern
-        cardSpendingPattern = view.findViewById(R.id.cardSpendingPattern);
-        ImageView ivSpendingPattern = cardSpendingPattern.findViewById(R.id.ivCardIcon);
+        View cardSpendingPattern = view.findViewById(R.id.cardSpendingPattern);
+        setupInsightCard(cardSpendingPattern, "Spending Pattern", R.drawable.ic_spending, R.color.icon_orange, R.drawable.bg_icon_circle_orange);
         tvSpendingPatternDesc = cardSpendingPattern.findViewById(R.id.tvCardDescription);
-        ((TextView) cardSpendingPattern.findViewById(R.id.tvCardTitle)).setText("Spending Pattern");
-        ivSpendingPattern.setImageResource(R.drawable.ic_spending);
-        ivSpendingPattern.setBackgroundResource(R.drawable.bg_icon_circle_orange);
-        ivSpendingPattern.setColorFilter(ContextCompat.getColor(requireContext(), R.color.icon_orange), android.graphics.PorterDuff.Mode.SRC_IN);
 
-        // Thẻ Savings Rate
-        cardSavingsRate = view.findViewById(R.id.cardSavingsRate);
-        ImageView ivSavingsRate = cardSavingsRate.findViewById(R.id.ivCardIcon);
+        View cardSavingsRate = view.findViewById(R.id.cardSavingsRate);
+        setupInsightCard(cardSavingsRate, "Savings Rate", R.drawable.ic_savings, R.color.icon_green, R.drawable.bg_icon_circle_green);
         tvSavingsRateDesc = cardSavingsRate.findViewById(R.id.tvCardDescription);
-        ((TextView) cardSavingsRate.findViewById(R.id.tvCardTitle)).setText("Savings Rate");
-        ivSavingsRate.setImageResource(R.drawable.ic_savings);
-        ivSavingsRate.setBackgroundResource(R.drawable.bg_icon_circle_green);
-        ivSavingsRate.setColorFilter(ContextCompat.getColor(requireContext(), R.color.icon_green), android.graphics.PorterDuff.Mode.SRC_IN);
 
-        // Thẻ Monthly Goal
-        cardMonthlyGoal = view.findViewById(R.id.cardMonthlyGoal);
-        ImageView ivMonthlyGoal = cardMonthlyGoal.findViewById(R.id.ivCardIcon);
+        View cardMonthlyGoal = view.findViewById(R.id.cardMonthlyGoal);
+        setupInsightCard(cardMonthlyGoal, "Monthly Goal", R.drawable.ic_goal, R.color.icon_blue, R.drawable.bg_icon_circle_blue);
         tvMonthlyGoalDesc = cardMonthlyGoal.findViewById(R.id.tvCardDescription);
-        ((TextView) cardMonthlyGoal.findViewById(R.id.tvCardTitle)).setText("Monthly Goal");
-        ivMonthlyGoal.setImageResource(R.drawable.ic_goal);
-        ivMonthlyGoal.setBackgroundResource(R.drawable.bg_icon_circle_blue);
-        ivMonthlyGoal.setColorFilter(ContextCompat.getColor(requireContext(), R.color.icon_blue), android.graphics.PorterDuff.Mode.SRC_IN);
 
-        // Ánh xạ các thành phần khác
         recyclerRecommendedActions = view.findViewById(R.id.recyclerRecommendedActions);
         fabChatbot = view.findViewById(R.id.fab_chatbot);
-        chatbotContainer = view.findViewById(R.id.chatbot_container);
     }
+
+    // Helper method để tránh lặp code
+    private void setupInsightCard(View cardView, String title, int iconRes, int iconTintRes, int backgroundRes) {
+        if (cardView != null) {
+            ImageView icon = cardView.findViewById(R.id.ivCardIcon);
+            TextView titleView = cardView.findViewById(R.id.tvCardTitle);
+
+            titleView.setText(title);
+            icon.setImageResource(iconRes);
+            icon.setBackgroundResource(backgroundRes);
+            icon.setColorFilter(ContextCompat.getColor(requireContext(), iconTintRes), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+    }
+
 
     private void setupRecyclerView() {
         recyclerRecommendedActions.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -135,7 +126,11 @@ public class InsightsFragment extends Fragment {
     }
 
     private void setupListeners() {
-        fabChatbot.setOnClickListener(v -> toggleChatbot());
+        fabChatbot.setOnClickListener(v -> {
+            if (mListener != null) {
+                mListener.onChatbotButtonClicked();
+            }
+        });
     }
 
     private void fetchInsightData() {
@@ -153,7 +148,6 @@ public class InsightsFragment extends Fragment {
                     @Override
                     public void onResponse(Call<BaseResponse<AIInsightResponse>> call, Response<BaseResponse<AIInsightResponse>> response) {
                         showLoading(false);
-
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             AIInsightResponse data = response.body().getPayload();
                             if (data != null) {
@@ -182,17 +176,16 @@ public class InsightsFragment extends Fragment {
     }
 
     private void updateUI(AIInsightResponse data) {
-        // Cập nhật các thẻ insight
         tvBudgetAlertDesc.setText(data.getBudgetAlert());
         tvSpendingPatternDesc.setText(data.getSpendingPattern());
         tvSavingsRateDesc.setText(data.getSavingsRate());
         tvMonthlyGoalDesc.setText(data.getMonthlyGoal());
 
-        // Cập nhật danh sách Recommended Actions
         if (data.getFinancialTips() != null) {
             actionsAdapter.updateData(data.getFinancialTips());
         }
     }
+
     private void showLoading(boolean isLoading) {
         if (isLoading) {
             progressBar.setVisibility(View.VISIBLE);
@@ -202,8 +195,4 @@ public class InsightsFragment extends Fragment {
             nestedScrollView.setVisibility(View.VISIBLE);
         }
     }
-    private void toggleChatbot() {
-        // ... (logic để mở/đóng fragment chatbot)
-    }
-
 }

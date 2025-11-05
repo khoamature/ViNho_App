@@ -1,100 +1,118 @@
 package fpt.edu.vn.vinho_app.ui.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.ui.adapter.ChatAdapter;
-import fpt.edu.vn.vinho_app.data.remote.dto.request.ragchat.ChatRequest;
-import fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat.ChatResponse;
-import fpt.edu.vn.vinho_app.data.repository.RagChatRepository;
-import fpt.edu.vn.vinho_app.ui.viewmodel.Message;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class ChatbotFragment extends Fragment {
 
-    private RecyclerView recyclerView;
-    private ChatAdapter adapter;
-    private List<Message> messageList;
+    private DrawerLayout drawerLayout;
+    private ImageView btnOpenDrawer;
+    private NavigationView navView;
+    private RecyclerView recyclerChatMessages;
+    private TextView tvWelcomeMessage;
     private EditText editTextMessage;
+    private FloatingActionButton btnSendMessage;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Tạm thời ẩn StatusBar của Activity
+        if (getActivity() != null && getActivity().getWindow() != null) {
+            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
         return inflater.inflate(R.layout.fragment_chatbot, container, false);
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Hiện lại StatusBar khi Fragment bị hủy
+        if (getActivity() != null && getActivity().getWindow() != null) {
+            getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        recyclerView = view.findViewById(R.id.recyclerViewChat);
-        editTextMessage = view.findViewById(R.id.editTextMessage);
-        Button buttonSend = view.findViewById(R.id.buttonSend);
-
-        messageList = new ArrayList<>();
-        adapter = new ChatAdapter(messageList);
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
-
-        buttonSend.setOnClickListener(v -> sendMessage());
+        mapViews(view);
+        setupListeners();
     }
 
-    private void sendMessage() {
-        String messageText = editTextMessage.getText().toString().trim();
-        if (!messageText.isEmpty()) {
-            messageList.add(new Message(messageText, true));
-            adapter.notifyItemInserted(messageList.size() - 1);
-            editTextMessage.setText("");
+    private void mapViews(View view) {
+        drawerLayout = view.findViewById(R.id.drawer_layout);
+        btnOpenDrawer = view.findViewById(R.id.btnOpenDrawer); // Ánh xạ nút back mới
+        navView = view.findViewById(R.id.nav_view);
+        recyclerChatMessages = view.findViewById(R.id.recycler_chat_messages);
+        tvWelcomeMessage = view.findViewById(R.id.tv_welcome_message);
+        editTextMessage = view.findViewById(R.id.edit_text_message);
+        btnSendMessage = view.findViewById(R.id.btn_send_message);
+    }
 
-            final Message thinkingMessage = new Message("Thinking...", false);
-            messageList.add(thinkingMessage);
-            adapter.notifyItemInserted(messageList.size() - 1);
-            recyclerView.scrollToPosition(messageList.size() - 1);
+    private void setupListeners() {
+        // SỬA LẠI: Sự kiện cho nút Back
+        btnOpenDrawer.setOnClickListener(v -> {
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawer(GravityCompat.START);
+            } else {drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
 
-            ChatRequest request = new ChatRequest(messageText, "01F68AE3-7AA4-4AC0-8778-215D9B113D44");
-            Call<ChatResponse> call = RagChatRepository.getRagChatService(getContext()).chat(request);
+        btnSendMessage.setOnClickListener(v -> {
+            String message = editTextMessage.getText().toString().trim();
+            if (!message.isEmpty()) {
+                sendMessage(message);
+            }
+        });
 
-            call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<ChatResponse> call, @NonNull Response<ChatResponse> response) {
-                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                        thinkingMessage.setText(response.body().getPayload().getAnswer());
-                    } else {
-                        String errorMessage = "Error: Could not get a response.";
-                        if (response.body() != null) {
-                            errorMessage = response.body().getMessage();
-                        }
-                        Log.e("API_ERROR", "Response not successful or body is null");
-                        thinkingMessage.setText(errorMessage);
-                    }
-                    adapter.notifyItemChanged(messageList.size() - 1);
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
-                    Log.e("API_ERROR", "API call failed", t);
-                    thinkingMessage.setText("Error: API call failed.");
-                    adapter.notifyItemChanged(messageList.size() - 1);
+        View headerView = navView.getHeaderView(0);
+        headerView.findViewById(R.id.btnNewChat).setOnClickListener(v -> {
+            newChat();
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
+        ImageView btnCloseDrawer = headerView.findViewById(R.id.btnCloseDrawer);
+        if (btnCloseDrawer != null) {
+            btnCloseDrawer.setOnClickListener(v -> {
+                // Gọi hàm onBackPressed của Activity cha để đóng toàn bộ fragment
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
                 }
             });
         }
+    }
+
+    private void sendMessage(String message) {
+        Toast.makeText(getContext(), "Sending: " + message, Toast.LENGTH_SHORT).show();
+        editTextMessage.setText("");
+        if (tvWelcomeMessage.getVisibility() == View.VISIBLE) {
+            tvWelcomeMessage.setVisibility(View.GONE);
+        }
+    }
+
+    private void newChat() {
+        Toast.makeText(getContext(), "New chat started!", Toast.LENGTH_SHORT).show();
+        tvWelcomeMessage.setVisibility(View.VISIBLE);
     }
 }
