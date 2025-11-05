@@ -14,6 +14,7 @@ import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.ui.fragments.AddTransactionFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.BudgetFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.HomeFragment;
+import fpt.edu.vn.vinho_app.ui.fragments.InsightsFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.ProfileFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.ReportFragment;
 import fpt.edu.vn.vinho_app.ui.fragments.TransactionFragment;
@@ -92,4 +93,10 @@ public class MainActivity extends AppCompatActivity implements HomeFragment.OnHo
     public void onReportsButtonClicked() {
         loadFragment(new ReportFragment());
     }
+
+    @Override
+    public void onInsightButtonClicked() {
+        loadFragment(new InsightsFragment());
+    }
+
 }

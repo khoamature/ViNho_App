@@ -57,6 +57,7 @@ public class HomeFragment extends Fragment {
 
     public interface OnHomeFragmentInteractionListener {
         void onReportsButtonClicked();
+        void onInsightButtonClicked();
     }
 
     private OnHomeFragmentInteractionListener mListener;
@@ -92,8 +93,13 @@ public class HomeFragment extends Fragment {
     private void setupListeners() {
         btnReports.setOnClickListener(v -> {
             if (mListener  != null) {
-                // 2. Nhờ Activity cha xử lý việc chuyển fragment
                 mListener.onReportsButtonClicked();
+            }
+        });
+
+        btnInsight.setOnClickListener(v -> {
+            if (mListener != null) {
+                mListener.onInsightButtonClicked();
             }
         });
     }

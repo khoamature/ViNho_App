@@ -8,11 +8,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,6 +53,8 @@ public class ReportFragment extends Fragment {
     private static final String TAG = "ReportFragment";
 
     private SharedPreferences sharedPreferences;
+    private ProgressBar progressBar;
+    private NestedScrollView nestedScrollView;
     private MaterialButtonToggleGroup toggleGroup;
     private TextView tvTotalIncome, tvTotalExpense, tvSavings;
     private LineChart lineChart;
@@ -91,6 +95,8 @@ public class ReportFragment extends Fragment {
     }
 
     private void mapViews(View view) {
+        progressBar = view.findViewById(R.id.progressBar);
+        nestedScrollView = view.findViewById(R.id.nestedScrollView);
         toggleGroup = view.findViewById(R.id.toggle_button_group);
         tvTotalIncome = view.findViewById(R.id.tvIncome);
         tvTotalExpense = view.findViewById(R.id.tvExpense);
@@ -135,12 +141,15 @@ public class ReportFragment extends Fragment {
         }
 
         Log.d(TAG, "Fetching statistics for UserID: " + userId + " with Range: " + currentRange);
-        // Có thể thêm hiệu ứng loading ở đây
+        showLoading(true);
+
 
         ReportRepository.getReportService(getContext()).getStatisticsReport(userId, currentRange)
                 .enqueue(new Callback<BaseResponse<StatisticsReportResponse>>() {
                     @Override
                     public void onResponse(Call<BaseResponse<StatisticsReportResponse>> call, Response<BaseResponse<StatisticsReportResponse>> response) {
+                        showLoading(false);
+
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             StatisticsReportResponse data = response.body().getPayload();
                             if (data != null) {
@@ -162,6 +171,7 @@ public class ReportFragment extends Fragment {
 
                     @Override
                     public void onFailure(Call<BaseResponse<StatisticsReportResponse>> call, Throwable t) {
+                        showLoading(false);
                         Log.e(TAG, "Network Failure", t);
                         Toast.makeText(getContext(), "Network Failure. Please check your connection.", Toast.LENGTH_SHORT).show();
                     }
@@ -267,6 +277,15 @@ public class ReportFragment extends Fragment {
         barChart.invalidate(); // Refresh biểu đồ
     }
 
+    private void showLoading(boolean isLoading) {
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            nestedScrollView.setVisibility(View.GONE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            nestedScrollView.setVisibility(View.VISIBLE);
+        }
+    }
     private String formatCurrency(double amount) {
         DecimalFormat formatter = new DecimalFormat("#,###đ");
         return formatter.format(amount);
