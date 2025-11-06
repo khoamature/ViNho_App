@@ -4,20 +4,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
-import fpt.edu.vn.vinho_app.ui.viewmodel.Message;
+import fpt.edu.vn.vinho_app.ui.model.Message;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
-
     private static final int VIEW_TYPE_USER = 1;
     private static final int VIEW_TYPE_BOT = 2;
-
     private List<Message> messageList;
 
     public ChatAdapter(List<Message> messageList) {
@@ -26,11 +23,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
 
     @Override
     public int getItemViewType(int position) {
-        if (messageList.get(position).isUser()) {
-            return VIEW_TYPE_USER;
-        } else {
-            return VIEW_TYPE_BOT;
-        }
+        return messageList.get(position).isUser() ? VIEW_TYPE_USER : VIEW_TYPE_BOT;
     }
 
     @NonNull
@@ -57,7 +50,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
 
     static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView textViewMessage;
-
         MessageViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.textViewMessage);

@@ -1,18 +1,31 @@
 package fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat;
 
-import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
+public class ChatResponse {
+    private String answer;
+    private String conversationId;
+    private String messageId;
 
-public class ChatResponse extends BaseResponse<ChatResponse.ChatResponsePayload> {
+    public String getAnswer() {
+        return answer;
+    }
 
-    public static class ChatResponsePayload {
-        private String answer;
+    public void setAnswer(String answer) {
+        this.answer = answer;
+    }
 
-        public String getAnswer() {
-            return answer;
-        }
+    public String getConversationId() {
+        return conversationId;
+    }
 
-        public void setAnswer(String answer) {
-            this.answer = answer;
-        }
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 }

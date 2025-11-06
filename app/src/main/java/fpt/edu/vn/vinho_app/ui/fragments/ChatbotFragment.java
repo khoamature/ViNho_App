@@ -33,11 +33,18 @@ import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.conversation.RenameConversationRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.ragchat.ChatRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.conversation.ConversationResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat.ChatResponse;
+import fpt.edu.vn.vinho_app.data.remote.dto.response.ragchat.MessageResponse;
 import fpt.edu.vn.vinho_app.data.repository.ConversationRepository;
+import fpt.edu.vn.vinho_app.ui.adapter.ChatAdapter;
 import fpt.edu.vn.vinho_app.ui.adapter.ChatHistoryAdapter;
 import fpt.edu.vn.vinho_app.ui.viewmodel.ChatbotViewModel;
+import fpt.edu.vn.vinho_app.ui.model.Message;
+import fpt.edu.vn.vinho_app.data.repository.ChatRepository;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,6 +66,9 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
 
     // private ConversationResponse selectedConversation;
     private ChatbotViewModel viewModel;
+    private ChatAdapter chatAdapter;
+    private List<Message> messageList;
+    private String currentConversationId = null;
 
     @Nullable
     @Override
@@ -80,14 +90,11 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         viewModel = new ViewModelProvider(this).get(ChatbotViewModel.class);
-
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
         mapViews(view);
         setupRecyclerViews();
         setupListeners();
-        fetchChatHistory();
     }
 
     private void mapViews(View view) {
@@ -104,7 +111,11 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
 
     private void setupRecyclerViews() {
         // Setup cho recycler tin nhắn
-        // TODO: ...
+        recyclerChatMessages.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerChatMessages.setLayoutManager(new LinearLayoutManager(getContext()));
+        messageList = new ArrayList<>();
+        chatAdapter = new ChatAdapter(messageList); // Sẽ không còn lỗi ở đây
+        recyclerChatMessages.setAdapter(chatAdapter);
 
         // Setup cho recycler lịch sử chat
         recyclerChatHistory.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -122,7 +133,7 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
         Log.d(TAG, "Fetching chat history for UserID: " + userId);
 
         ConversationRepository.getConversationService(getContext())
-                .getConversations(userId, 1000, "createdAt", true)
+                .getConversations(userId, 1000, "CreatedAt", true)
                 .enqueue(new Callback<PagedResponse<ConversationResponse>>() {
                     @Override
                     public void onResponse(Call<PagedResponse<ConversationResponse>> call, Response<PagedResponse<ConversationResponse>> response) {
@@ -162,6 +173,7 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
             if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 drawerLayout.closeDrawer(GravityCompat.START);
             } else {
+                fetchChatHistory();
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
@@ -190,27 +202,148 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
         }
     }
 
-    private void sendMessage(String message) {
-        Toast.makeText(getContext(), "Sending: " + message, Toast.LENGTH_SHORT).show();
+    private void sendMessage(String message) { // Tham số đầu vào tên là 'message'
+        // 1. Thêm tin nhắn của người dùng vào UI ngay lập tức
+        addMessageToChat(message, true); // Sử dụng 'message' ở đây
         editTextMessage.setText("");
+
+        // 2. Tạo request body
+        String userId = sharedPreferences.getString("userId", "");
+        if (userId.isEmpty()) return;
+
+        ChatRequest request;
+        if (currentConversationId == null) {
+            // Đây là tin nhắn đầu tiên của cuộc trò chuyện
+            request = new ChatRequest(userId, message); // Sử dụng 'message' ở đây
+        } else {
+            // Đây là tin nhắn tiếp theo
+            request = new ChatRequest(userId, currentConversationId, message); // Sử dụng 'message' ở đây
+        }
+
+        // 3. Thêm tin nhắn "đang trả lời..." của bot
+        addMessageToChat("...", false);
+
+        // 4. Gọi API
+        ChatRepository.getChatService(getContext()).postChatMessage(request)
+                .enqueue(new Callback<BaseResponse<ChatResponse>>() {
+                    @Override
+                    public void onResponse(Call<BaseResponse<ChatResponse>> call, Response<BaseResponse<ChatResponse>> response) {
+                        // Xóa tin nhắn "đang trả lời..."
+                        removeLastMessage();
+
+                        if (response.isSuccessful() && response.body() != null) {
+                            if (response.body().isSuccess()) {
+                                ChatResponse chatResponse = response.body().getPayload();
+                                if (chatResponse != null && chatResponse.getAnswer() != null) {
+                                    // Thêm câu trả lời của bot vào UI
+                                    addMessageToChat(chatResponse.getAnswer(), false);
+                                    // Nếu đây là tin nhắn đầu tiên, lưu lại conversationId
+                                    if (currentConversationId == null) {
+                                        currentConversationId = chatResponse.getConversationId();
+                                    }
+                                }
+                            } else {
+                                // Xử lý trường hợp isSuccess: false
+                                String errorMessage = "The system is under maintenance, please try again later.";
+                                addMessageToChat(errorMessage, false);
+                            }
+                        } else {
+                            // Xử lý lỗi HTTP
+                            String errorMessage = "An error occurred. Please try again.";
+                            addMessageToChat(errorMessage, false);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<BaseResponse<ChatResponse>> call, Throwable t) {
+                        removeLastMessage();
+                        String errorMessage = "Network error. Please check your connection.";
+                        addMessageToChat(errorMessage, false);
+                    }
+                });
+    }
+    // Phương thức helper để thêm tin nhắn vào RecyclerView
+    private void addMessageToChat(String text, boolean isUser) {
+        // Ẩn welcome message nếu cần
         if (tvWelcomeMessage.getVisibility() == View.VISIBLE) {
             tvWelcomeMessage.setVisibility(View.GONE);
+        }
+        messageList.add(new Message(text, isUser));
+        chatAdapter.notifyItemInserted(messageList.size() - 1);
+        recyclerChatMessages.scrollToPosition(messageList.size() - 1); // Tự động cuộn xuống
+    }
+
+    // Phương thức helper để xóa tin nhắn cuối (tin nhắn "...")
+    private void removeLastMessage() {
+        if (!messageList.isEmpty()) {
+            int lastIndex = messageList.size() - 1;
+            messageList.remove(lastIndex);
+            chatAdapter.notifyItemRemoved(lastIndex);
         }
     }
 
     private void newChat() {
-        Toast.makeText(getContext(), "New chat started!", Toast.LENGTH_SHORT).show();
+        // Reset lại mọi thứ
+        currentConversationId = null;
+        messageList.clear();
+        chatAdapter.notifyDataSetChanged();
         tvWelcomeMessage.setVisibility(View.VISIBLE);
+        Toast.makeText(getContext(), "New chat started!", Toast.LENGTH_SHORT).show();
+        fetchChatHistory();
     }
 
     // --- Implement các phương thức từ interface của Adapter ---
 
     @Override
     public void onHistoryItemSelected(ConversationResponse conversation) {
-        // TODO: Load nội dung của cuộc trò chuyện này
-        Toast.makeText(getContext(), "Loading: " + conversation.getTitle(), Toast.LENGTH_SHORT).show();
-        drawerLayout.closeDrawer(GravityCompat.START);
+        Log.d(TAG, "Loading conversation: " + conversation.getId());
+        drawerLayout.closeDrawer(GravityCompat.START); // Đóng menu
+
+        // 1. Xóa các tin nhắn hiện tại và reset màn hình
+        messageList.clear();
+        chatAdapter.notifyDataSetChanged();
+        tvWelcomeMessage.setVisibility(View.GONE); // Ẩn welcome message
+
+        // 2. Lưu lại conversationId hiện tại
+        this.currentConversationId = conversation.getId();
+
+        // 3. Gọi API để lấy tất cả các tin nhắn cũ của cuộc trò chuyện này
+        fetchMessagesForConversation(conversation.getId());
     }
+    private void fetchMessagesForConversation(String conversationId) {
+        // Thêm một tin nhắn loading tạm thời
+        addMessageToChat("Loading history...", false);
+
+        ChatRepository.getChatService(getContext())
+                .getMessagesForConversation(conversationId, 1000, "CreatedAt", false) // SortDescending=false để lấy từ cũ đến mới
+                .enqueue(new Callback<PagedResponse<MessageResponse>>() {
+                    @Override
+                    public void onResponse(Call<PagedResponse<MessageResponse>> call, Response<PagedResponse<MessageResponse>> response) {
+                        // Xóa tin nhắn loading
+                        removeLastMessage();
+
+                        if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                            List<MessageResponse> oldMessages = response.body().getPayload();
+                            if (oldMessages != null && !oldMessages.isEmpty()) {
+                                // Duyệt qua danh sách và thêm từng tin nhắn vào UI
+                                for (MessageResponse msg : oldMessages) {
+                                    boolean isUser = "User".equalsIgnoreCase(msg.getSender());
+                                    addMessageToChat(msg.getContent(), isUser);
+                                }
+                            }
+                        } else {
+                            Toast.makeText(getContext(), "Failed to load chat history.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<PagedResponse<MessageResponse>> call, Throwable t) {
+                        removeLastMessage();
+                        Toast.makeText(getContext(), "Network error while loading history.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
 
     @Override
     public void onMenuClicked(ConversationResponse conversation) {

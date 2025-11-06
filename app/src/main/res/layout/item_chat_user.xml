@@ -10,8 +10,8 @@
         android:id="@+id/textViewMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/holo_blue_light"
-        android:textColor="@android:color/white"
-        android:padding="12dp" />
-
+        android:background="@drawable/bg_chat_bubble_user"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:text="This is a user message."/>
 </LinearLayout>
