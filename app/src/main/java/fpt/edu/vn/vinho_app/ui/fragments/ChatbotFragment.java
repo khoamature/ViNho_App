@@ -2,6 +2,7 @@ package fpt.edu.vn.vinho_app.ui.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.content.SharedPreferences;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.conversation.RenameConversationRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.PagedResponse;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.conversation.ConversationResponse;
 import fpt.edu.vn.vinho_app.data.repository.ConversationRepository;
@@ -39,7 +42,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHistoryActionsListener {
+public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHistoryActionsListener, ChatHistoryMenuBottomSheet.OnMenuOptionClickListener{
     private static final String TAG = "ChatbotFragment";
 
     private DrawerLayout drawerLayout;
@@ -204,6 +207,7 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
 
     @Override
     public void onHistoryItemSelected(ConversationResponse conversation) {
+        // TODO: Load nội dung của cuộc trò chuyện này
         Toast.makeText(getContext(), "Loading: " + conversation.getTitle(), Toast.LENGTH_SHORT).show();
         drawerLayout.closeDrawer(GravityCompat.START);
     }
@@ -215,5 +219,87 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
         // 2. Mở BottomSheet
         ChatHistoryMenuBottomSheet bottomSheet = new ChatHistoryMenuBottomSheet();
         bottomSheet.show(getChildFragmentManager(), bottomSheet.getTag());
+    }
+
+    @Override
+    public void onRenameClicked(ConversationResponse conversation) {
+        showRenameDialog(conversation);
+    }
+
+    @Override
+    public void onDeleteClicked(ConversationResponse conversation) {
+        showDeleteConfirmationDialog(conversation);
+    }
+    private void showRenameDialog(final ConversationResponse conversation) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Rename Conversation");
+
+        // Set up the input
+        final EditText input = new EditText(requireContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setText(conversation.getTitle()); // Điền sẵn tên cũ
+        input.setSelection(input.getText().length()); // Đưa con trỏ về cuối
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newTitle = input.getText().toString().trim();
+            if (!newTitle.isEmpty() && !newTitle.equals(conversation.getTitle())) {
+                renameConversation(conversation.getId(), newTitle);
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    private void showDeleteConfirmationDialog(final ConversationResponse conversation) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Conversation")
+                .setMessage("Are you sure you want to delete this chat history?\n\"" + conversation.getTitle() + "\"")
+                .setPositiveButton("Delete", (dialog, which) -> deleteConversation(conversation.getId()))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void renameConversation(String conversationId, String newTitle) {
+        RenameConversationRequest request = new RenameConversationRequest(newTitle);
+        ConversationRepository.getConversationService(getContext()).renameConversation(conversationId, request)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(getContext(), "Renamed successfully", Toast.LENGTH_SHORT).show();
+                            fetchChatHistory(); // Làm mới lại danh sách
+                        } else {
+                            Toast.makeText(getContext(), "Failed to rename", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void deleteConversation(String conversationId) {
+        ConversationRepository.getConversationService(getContext()).deleteConversation(conversationId)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(getContext(), "Deleted successfully", Toast.LENGTH_SHORT).show();
+                            fetchChatHistory(); // Làm mới lại danh sách
+                        } else {
+                            Toast.makeText(getContext(), "Failed to delete", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Toast.makeText(getContext(), "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
