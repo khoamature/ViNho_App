@@ -15,6 +15,9 @@
     <color name="pie_color_4">#F44336</color> <!-- Đỏ -->
     <color name="pie_color_5">#9C27B0</color> <!-- Tím -->
 
+    <color name="budget_red">#D32F2F</color>
+    <color name="budget_blue">#3F51B5</color>
+
     <color name="icon_red">#FF0000</color>
     <color name="icon_orange">#FF3F00</color>
     <color name="icon_green">#079408</color>

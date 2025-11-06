@@ -92,12 +92,18 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             // Lấy các giá trị số
             double spentAmount = budget.getSpentAmount();
             double budgetedAmount = budget.getBudgetedAmount();
+            double remainingAmount = budget.getRemainingAmount();
 
             // Format và hiển thị tiền tệ
             // Sử dụng Math.abs() để luôn hiển thị số dương cho spentAmount và budgetedAmount
             tvSpentAmount.setText(String.format(Locale.US, "%s ", formatCurrency(Math.abs(spentAmount))));
             tvBudgetedAmount.setText(String.format(Locale.US, "/ %s", formatCurrency(budgetedAmount)));
-
+            tvRemainingAmount.setText(formatCurrency(remainingAmount));
+            if (remainingAmount < 0) {
+                tvRemainingAmount.setTextColor(itemView.getContext().getResources().getColor(R.color.budget_red));
+            } else {
+                tvRemainingAmount.setTextColor(itemView.getContext().getResources().getColor(R.color.budget_blue));
+            }
             // 2. Tính toán phần trăm và progress bar
             double progressValue = 0;
             if (budgetedAmount > 0) {
@@ -106,7 +112,17 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
             // 3. Cập nhật ProgressBar và TextView phần trăm
             progressBar.setProgress((int) progressValue);
-            tvUsedPercentage.setText(String.format(Locale.US, "%d%%", (int) progressValue));
+            if (progressValue > 100) {
+                // Nếu vượt quá 100%, hiển thị "Over budget"
+                int overPercentage = (int) (progressValue - 100);
+                tvUsedPercentage.setText(String.format(Locale.US, "Over budget %d%%", overPercentage));
+                tvUsedPercentage.setTextColor(itemView.getContext().getResources().getColor(R.color.budget_red));
+            } else {
+                // Nếu chưa vượt, hiển thị phần trăm bình thường
+                tvUsedPercentage.setText(String.format(Locale.US, "%d%%", (int) progressValue));
+                // Trả về màu mặc định
+                tvUsedPercentage.setTextColor(itemView.getContext().getResources().getColor(R.color.budget_blue));
+            }
 
             // 4. Xử lý sự kiện cho nút menu (không đổi)
             btnMenu.setOnClickListener(view -> {

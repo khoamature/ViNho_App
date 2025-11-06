@@ -35,40 +35,47 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 app:selectionRequired="true"
-                app:singleSelection="true">
+                app:singleSelection="true"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.App.SmallComponent">
 
                 <Button
                     android:id="@+id/btnDaily"
-                    style="ShapeAppearance.App.SmallComponent"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Daily"
                     android:textColor="@color/button_text_color_selector"
                     app:backgroundTint="@color/button_background_tint_selector"
-                    android:textAllCaps="false"/>
+                    app:strokeColor="@color/button_stroke_color_selector"
+                    android:textAllCaps="false"
+                    app:strokeWidth="2dp"/>
 
                 <Button
                     android:id="@+id/btnWeekly"
-                    style="ShapeAppearance.App.SmallComponent"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Weekly"
                     android:textColor="@color/button_text_color_selector"
                     app:backgroundTint="@color/button_background_tint_selector"
-                    android:textAllCaps="false"/>
+                    app:strokeColor="@color/button_stroke_color_selector"
+                    android:textAllCaps="false"
+                    app:strokeWidth="2dp"/>
 
                 <Button
                     android:id="@+id/btnMonthly"
-                    style="ShapeAppearance.App.SmallComponent"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Monthly"
                     android:textColor="@color/button_text_color_selector"
                     app:backgroundTint="@color/button_background_tint_selector"
-                    android:textAllCaps="false"/>
+                    app:strokeColor="@color/button_stroke_color_selector"
+                    android:textAllCaps="false"
+                    app:strokeWidth="2dp"/>
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
         </LinearLayout>
@@ -103,7 +110,8 @@
                     android:layout_weight="1"
                     android:layout_marginStart="4dp"
                     android:layout_marginEnd="4dp"
-                    app:cardCornerRadius="16dp">
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -156,7 +164,8 @@
                     android:layout_weight="1"
                     android:layout_marginStart="4dp"
                     android:layout_marginEnd="4dp"
-                    app:cardCornerRadius="16dp">
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -207,7 +216,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    app:cardCornerRadius="16dp">
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -259,7 +269,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -299,7 +310,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -337,7 +349,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
