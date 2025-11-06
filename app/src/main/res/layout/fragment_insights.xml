@@ -142,8 +142,8 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_chatbot"
-        app:backgroundTint="@color/black"
-        app:tint="@color/white" />
+        app:backgroundTint="#BDDFDA"
+        app:tint="@null"/>
 
     <!-- Container cho Chatbot Fragment -->
     <FrameLayout

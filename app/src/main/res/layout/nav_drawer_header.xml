@@ -16,7 +16,7 @@
         android:focusable="true"
         android:padding="10dp"
         android:src="@drawable/ic_close"
-        app:tint="@color/white"/>
+        app:tint="@color/black"/>
 
     <Button
         android:id="@+id/btnNewChat"
@@ -24,10 +24,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="New Chat"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         app:icon="@drawable/ic_add_chat"
-        app:iconTint="@color/white"
-        app:strokeColor="@color/white"/>
+        app:iconTint="@color/black"
+        app:strokeColor="@color/black"/>
 
 
 

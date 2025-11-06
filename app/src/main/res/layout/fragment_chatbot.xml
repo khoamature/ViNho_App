@@ -6,7 +6,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1E1F20"
+    android:background="@android:color/white"
     android:clickable="true"
     android:focusable="true"
     tools:context=".ui.fragments.ChatbotFragment"
@@ -41,7 +41,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:padding="12dp"
                     android:src="@drawable/ic_menu"
-                    app:tint="@color/white" />
+                    app:tint="@color/black" />
 
             </androidx.appcompat.widget.Toolbar>
         </com.google.android.material.appbar.AppBarLayout>
@@ -64,7 +64,7 @@
             android:gravity="center"
             android:padding="32dp"
             android:text="Hello! I am Vi Nho Financial Assistant!\nWhat can I help you?"
-            android:textColor="#CCCCCC"
+            android:textColor="#333333"
             android:textSize="22sp"
             android:visibility="visible" />
 
@@ -83,13 +83,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/bg_chat_input"
+                android:background="@drawable/bg_chat_input_light"
                 android:hint="Type your message..."
                 android:maxLines="4"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="12dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9E9E9E" />
+                android:textColor="@color/black"
+                android:textColorHint="#757575" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/btn_send_message"
@@ -97,6 +97,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_send"
+                android:background="@drawable/bg_button_send_light"
                 app:backgroundTint="#4A4A4A"
                 app:fabSize="mini"
                 app:tint="@color/white" />
@@ -109,11 +110,11 @@
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="#1E1F20"
+        android:background="@android:color/white"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_drawer_header"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white"
+        app:itemIconTint="@color/black"
+        app:itemTextColor="@color/black"
         app:menu="@menu/chatbot_history_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
