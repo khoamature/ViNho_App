@@ -98,7 +98,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@drawable/ic_send"
                 android:background="@drawable/bg_button_send_light"
-                app:backgroundTint="#4A4A4A"
+                app:backgroundTint="#ACA9A9"
                 app:fabSize="mini"
                 app:tint="@color/white" />
         </LinearLayout>
