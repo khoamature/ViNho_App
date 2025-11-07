@@ -1,7 +1,8 @@
 package fpt.edu.vn.vinho_app.data.remote.dto.request.budget;
 
 public class UpdateBudgetRequest {
-    private String categoryId;private double limitAmount;
+    private String categoryId;
+    private double limitAmount;
 
     public UpdateBudgetRequest(String categoryId, double limitAmount) {
         this.categoryId = categoryId;

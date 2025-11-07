@@ -215,6 +215,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     }
 
     private void fetchCategoriesAndThenTransactions(String type) {
+        if (getContext() == null || !isAdded()) {
+            return;
+        }
+
         String userId = sharedPreferences.getString("userId", "");
         if (userId.isEmpty()) return;
 
@@ -225,6 +229,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                 .enqueue(new Callback<PagedResponse<GetCategoryResponse>>() {
                     @Override
                     public void onResponse(Call<PagedResponse<GetCategoryResponse>> call, Response<PagedResponse<GetCategoryResponse>> response) {
+                        if (getContext() == null || !isAdded()) {
+                            return;
+                        }
+
                         if (response.isSuccessful() && response.body() != null) {
                             categoryList.clear();
                             categoryList.addAll(response.body().getPayload());
@@ -251,7 +259,9 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                     @Override
                     public void onFailure(Call<PagedResponse<GetCategoryResponse>> call, Throwable t) {
                         Log.e(TAG, "Failure fetching categories", t);
-                        fetchTransactions();
+                        if (getContext() != null && isAdded()) {
+                            fetchTransactions();
+                        }
                     }
                 });
     }
@@ -279,6 +289,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
     }
 
     private void fetchTransactions() {
+        if (getContext() == null || !isAdded()) {
+            return;
+        }
+
         swipeRefreshLayout.setRefreshing(true);
         String userId = sharedPreferences.getString("userId", "");
         if (userId.isEmpty()) { swipeRefreshLayout.setRefreshing(false); return; }
@@ -303,6 +317,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                 .enqueue(new Callback<TransactionApiResponse>() {
                     @Override
                     public void onResponse(Call<TransactionApiResponse> call, Response<TransactionApiResponse> response) {
+                        if (getContext() == null || !isAdded()) {
+                            return;
+                        }
+
                         swipeRefreshLayout.setRefreshing(false);
                         if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                             List<TransactionSummaryResponse> payload = response.body().getPayload();
@@ -325,6 +343,10 @@ public class TransactionFragment extends Fragment implements View.OnClickListene
                     }
                     @Override
                     public void onFailure(Call<TransactionApiResponse> call, Throwable t) {
+                        if (getContext() == null || !isAdded()) {
+                            return;
+                        }
+
                         swipeRefreshLayout.setRefreshing(false);
                         Log.e(TAG, "Step 4: Network Failure.", t);
                         handleEmptyOrError();
