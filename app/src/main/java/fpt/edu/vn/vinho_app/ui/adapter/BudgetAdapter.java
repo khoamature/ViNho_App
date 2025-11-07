@@ -96,8 +96,8 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
 
             // Format và hiển thị tiền tệ
             // Sử dụng Math.abs() để luôn hiển thị số dương cho spentAmount và budgetedAmount
-            tvSpentAmount.setText(String.format(Locale.US, "%s ", formatCurrency(Math.abs(spentAmount))));
-            tvBudgetedAmount.setText(String.format(Locale.US, "/ %s", formatCurrency(budgetedAmount)));
+            tvSpentAmount.setText(String.format(Locale.US, "%s", formatCurrency(Math.abs(spentAmount))));
+            tvBudgetedAmount.setText(String.format(Locale.US, " / %s", formatCurrency(budgetedAmount)));
             tvRemainingAmount.setText(formatCurrency(remainingAmount));
             if (remainingAmount < 0) {
                 tvRemainingAmount.setTextColor(itemView.getContext().getResources().getColor(R.color.budget_red));
