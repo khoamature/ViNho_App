@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +34,7 @@ import java.util.Locale;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.CreateBudgetRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetBudgetOverviewRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetPagedBudgetsRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.UpdateBudgetRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.category.GetPagedCategoriesRequest;
@@ -63,13 +65,32 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
     private String selectedMonthValue; // Dùng để lưu giá trị yyyy-MM-dd
     private String selectedCategoryType = "Expense"; // Mặc định là Expens
 
+    private ImageView btnPreviousMonth, btnNextMonth;
+    private TextView tvCurrentMonth;
+    private Calendar currentCalendar;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_budget, container, false);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
 
-        // Initialize views
+        currentCalendar = Calendar.getInstance();
+
+        mapViews(view);
+        setupListeners();
+
+        adapter = new BudgetAdapter(new ArrayList<>(), this);
+        recyclerCategories.setAdapter(adapter);
+
+        // Fetch data
+        updateMonthDisplay();
+        fetchBudgetOverview();
+
+        return view;
+    }
+
+    private void mapViews(View view) {
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
         layoutEmptyState = view.findViewById(R.id.layoutEmptyState);
@@ -77,17 +98,30 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
         tvSpentAmount = view.findViewById(R.id.tvSpentAmount);
         btnAddCategory = view.findViewById(R.id.btnAddCategory);
 
-        // You will need to adjust your BudgetAdapter to accept a List<CategoryOverview>
-        // Or create a new adapter. For this example, I'll assume it can be adapted.
-        adapter = new BudgetAdapter(new ArrayList<>(), this);
-        recyclerCategories.setAdapter(adapter);
-
-        // Fetch data
-        fetchBudgetOverview();
-
+        btnPreviousMonth = view.findViewById(R.id.btnPreviousMonth);
+        btnNextMonth = view.findViewById(R.id.btnNextMonth);
+        tvCurrentMonth = view.findViewById(R.id.tvCurrentMonth);
+    }
+    private void setupListeners() {
         btnAddCategory.setOnClickListener(v -> showAddBudgetDialog());
 
-        return view;
+        // THÊM MỚI: Gán sự kiện click cho các nút tháng
+        btnPreviousMonth.setOnClickListener(v -> {
+            currentCalendar.add(Calendar.MONTH, -1); // Lùi 1 tháng
+            updateMonthDisplay();
+            fetchBudgetOverview();
+        });
+
+        btnNextMonth.setOnClickListener(v -> {
+            currentCalendar.add(Calendar.MONTH, 1); // Tới 1 tháng
+            updateMonthDisplay();
+            fetchBudgetOverview();
+        });
+    }
+
+    private void updateMonthDisplay() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM yyyy", Locale.ENGLISH);
+        tvCurrentMonth.setText(dateFormat.format(currentCalendar.getTime()));
     }
 
     @Override
@@ -134,7 +168,6 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
                 .show();
     }
 
-    // SỬA LẠI: showEditBudgetDialog giờ sẽ nhận vào đối tượng GetBudgetResponse
     private void showEditBudgetDialog(GetBudgetResponse budgetDetails) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -256,9 +289,18 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
     }
 
     private void fetchBudgetOverview() {
-        GetPagedBudgetsRequest request = new GetPagedBudgetsRequest();
         String userId = sharedPreferences.getString("userId", "");
-        request.setUserId(userId);
+        if (userId.isEmpty()) {
+            Toast.makeText(getContext(), "User not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        Calendar tempCal = (Calendar) currentCalendar.clone();
+        tempCal.set(Calendar.DAY_OF_MONTH, 1);
+        String monthString = apiDateFormat.format(tempCal.getTime());
+
+        GetBudgetOverviewRequest request = new GetBudgetOverviewRequest(userId, monthString);
 
         BudgetRepository.getBudgetService(getContext()).getBudgetOverview(request).enqueue(new Callback<BaseResponse<BudgetOverviewResponse>>() {
             @Override
@@ -274,7 +316,7 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetAc
                         // Update RecyclerView
                         layoutEmptyState.setVisibility(View.GONE);
                         recyclerCategories.setVisibility(View.VISIBLE);
-                        adapter.updateData(overview.getCategoryOverviews()); // You need to implement this method in your adapter
+                        adapter.updateData(overview.getCategoryOverviews());
 
                     } else {
                         // Show empty state

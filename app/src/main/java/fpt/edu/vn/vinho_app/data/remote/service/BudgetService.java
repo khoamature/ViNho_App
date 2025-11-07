@@ -1,6 +1,7 @@
 package fpt.edu.vn.vinho_app.data.remote.service;
 
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.CreateBudgetRequest;
+import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetBudgetOverviewRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.GetPagedBudgetsRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.request.budget.UpdateBudgetRequest;
 import fpt.edu.vn.vinho_app.data.remote.dto.response.base.BaseResponse;
@@ -22,16 +23,16 @@ public interface BudgetService {
     @POST("budgets")
     Call<BaseResponse<String>> createBudget(@Body CreateBudgetRequest request);
 
-    @POST("/api/budgets/over-view")
-    Call<BaseResponse<BudgetOverviewResponse>> getBudgetOverview(@Body GetPagedBudgetsRequest request);
+    @POST("budgets/over-view")
+    Call<BaseResponse<BudgetOverviewResponse>> getBudgetOverview(@Body GetBudgetOverviewRequest request);
 
-    @PUT("/api/budgets/{id}")
+    @PUT("budgets/{id}")
     Call<BaseResponse<String>> updateBudget(@Path("id") String budgetId, @Body UpdateBudgetRequest request);
 
-    @DELETE("/api/budgets/{id}")
+    @DELETE("budgets/{id}")
     Call<Void> deleteBudget(@Path("id") String budgetId);
 
-    @GET("/api/budgets/{id}")
+    @GET("budgets/{id}")
     Call<BaseResponse<GetBudgetResponse>> getBudgetById(@Path("id") String budgetId);
 
 }
