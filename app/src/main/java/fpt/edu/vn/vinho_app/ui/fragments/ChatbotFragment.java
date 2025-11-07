@@ -45,6 +45,7 @@ import fpt.edu.vn.vinho_app.ui.adapter.ChatHistoryAdapter;
 import fpt.edu.vn.vinho_app.ui.viewmodel.ChatbotViewModel;
 import fpt.edu.vn.vinho_app.ui.model.Message;
 import fpt.edu.vn.vinho_app.data.repository.ChatRepository;
+import io.noties.markwon.Markwon;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,6 +70,7 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
     private ChatAdapter chatAdapter;
     private List<Message> messageList;
     private String currentConversationId = null;
+    private Markwon markwon;
 
     @Nullable
     @Override
@@ -90,6 +92,7 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        markwon = Markwon.create(requireContext());
         viewModel = new ViewModelProvider(this).get(ChatbotViewModel.class);
         sharedPreferences = requireActivity().getSharedPreferences("myPrefs", Context.MODE_PRIVATE);
         mapViews(view);
@@ -114,9 +117,9 @@ public class ChatbotFragment extends Fragment implements ChatHistoryAdapter.OnHi
         recyclerChatMessages.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerChatMessages.setLayoutManager(new LinearLayoutManager(getContext()));
         messageList = new ArrayList<>();
-        chatAdapter = new ChatAdapter(messageList); // Sẽ không còn lỗi ở đây
         recyclerChatMessages.setAdapter(chatAdapter);
-
+        chatAdapter = new ChatAdapter(messageList, markwon);
+        recyclerChatMessages.setAdapter(chatAdapter);
         // Setup cho recycler lịch sử chat
         recyclerChatHistory.setLayoutManager(new LinearLayoutManager(getContext()));
         chatHistoryAdapter = new ChatHistoryAdapter(new ArrayList<>(), this);

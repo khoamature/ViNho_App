@@ -90,4 +90,11 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.google.android.material:material:1.10.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // Thư viện Markwon
+    implementation ("io.noties.markwon:core:4.6.2")
+    implementation ("io.noties.markwon:editor:4.6.2")
+    implementation ("io.noties.markwon:ext-tables:4.6.2")
+    implementation ("io.noties.markwon:html:4.6.2")
+    implementation ("io.noties.markwon:ext-strikethrough:4.6.2")
 }

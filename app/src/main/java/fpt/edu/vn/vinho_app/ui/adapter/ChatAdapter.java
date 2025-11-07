@@ -11,14 +11,17 @@ import java.util.List;
 
 import fpt.edu.vn.vinho_app.R;
 import fpt.edu.vn.vinho_app.ui.model.Message;
+import io.noties.markwon.Markwon;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
     private static final int VIEW_TYPE_USER = 1;
     private static final int VIEW_TYPE_BOT = 2;
     private List<Message> messageList;
+    private final Markwon markwon;
 
-    public ChatAdapter(List<Message> messageList) {
+    public ChatAdapter(List<Message> messageList, Markwon markwon) {
         this.messageList = messageList;
+        this.markwon = markwon;
     }
 
     @Override
@@ -40,7 +43,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
-        holder.textViewMessage.setText(messageList.get(position).getText());
+        Message message = messageList.get(position);
+        markwon.setMarkdown(holder.textViewMessage, message.getText());
     }
 
     @Override
